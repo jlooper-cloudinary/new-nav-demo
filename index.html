@@ -1,0 +1,888 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Slashed Main Nav</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: presenter strip, then nav + hero only (sized to the live homepage), then the evidence on the same dark ground.
+   Nav pattern from linear.app: right-clustered pills, floating blurred panel that resizes between menus, titled items with
+   two-line descriptions, a plain-link column behind a divider, and a footer strip inside the panel. */
+:root{
+  --bg:#050d17;
+  --navy:#0d1e32;      /* cloudinary.com hero ground */
+  --panel:#0a1829;
+  --raise:#12283f;
+  --line:rgba(255,255,255,.12);
+  --line2:rgba(255,255,255,.26);
+  --fg:#f2f6fb;
+  --mut:#a3b5c8;
+  --dim:#7b91a8;
+  --nav-mut:#93a5b8;
+  --blue:#0095ff;
+  --blue-t:#58b9ff;
+  --lime:#d5fda1;
+  --teal:#60cfb7;
+  --amber:#f3bb55;
+  --coral:#ff8f7e;
+  --ink:#031f33;
+  --f-body:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 15px/1.55 var(--f-body);padding-inline:16px;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+.wrap{max-width:1440px;margin-inline:auto}
+
+/* ---------- control strip ---------- */
+.ctl{position:sticky;top:env(safe-area-inset-top,0px);z-index:60;background:rgba(5,13,23,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);margin-inline:-16px;padding:12px 16px}
+.ctl-in{max-width:1440px;margin-inline:auto;display:flex;flex-wrap:wrap;align-items:center;gap:14px 28px}
+.ctl h1{margin:0;font:600 13px/1.2 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:999px;padding:3px;gap:2px}
+.seg button{padding:7px 18px;border-radius:999px;font-weight:600;font-size:13px;color:var(--mut)}
+.seg button[aria-pressed="true"]{background:var(--lime);color:var(--ink)}
+.tog{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--mut)}
+.tog input{accent-color:var(--lime);width:16px;height:16px}
+.stats{display:flex;flex-wrap:wrap;gap:6px 26px;margin-left:auto}
+.stat{font:400 12px/1.3 var(--f-mono);color:var(--dim);display:flex;flex-direction:column}
+.stat b{font:600 15px/1.3 var(--f-mono);color:var(--fg);font-variant-numeric:tabular-nums}
+.stat b i{font-style:normal;color:var(--teal)}
+.legend{display:none;gap:16px;font-size:12px;color:var(--mut);align-items:center}
+.legend.on{display:inline-flex;flex-wrap:wrap}
+.legend span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:var(--blue-t)}
+.legend span.f::before{background:var(--amber)}
+
+/* ---------- browser frame ---------- */
+.stage{padding-block:28px 12px}
+.frame{border:1px solid var(--line2);border-radius:12px;overflow:hidden;background:var(--navy)}
+.chrome{display:flex;align-items:center;gap:12px;padding:9px 14px;background:#08131f;border-bottom:1px solid var(--line)}
+.dots{display:flex;gap:6px}.dots i{width:10px;height:10px;border-radius:50%;background:#26394d}
+.url{flex:1;max-width:520px;margin-inline:auto;text-align:center;font:400 12px var(--f-mono);color:var(--dim);background:#0d1e32;border-radius:6px;padding:4px 10px}
+.hint{font-size:13px;color:var(--mut);margin:12px 2px 0}
+.hint b{color:var(--fg);font-weight:600}
+
+/* ---------- Today bar (cloudinary.com as it ships) ---------- */
+.navwrap{position:relative;z-index:30;background:var(--navy)}
+.navwrap + .navwrap{border-top:1px dashed var(--line2)}
+.tagline{display:none;position:absolute;left:10px;top:6px;font:500 10px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);z-index:2}
+.compare .tagline{display:block}
+.nav{display:flex;align-items:center;gap:0;height:73px;padding-inline:clamp(16px,2vw,32px)}
+.compare .nav{padding-top:12px}
+.logo{display:block;width:160px;height:30px;flex:none;margin-right:18px}
+.logo svg{width:100%;height:100%;display:block}
+.logo path{fill:#fff}
+.tops{display:flex;align-items:center;height:100%;margin:0;padding:0;list-style:none}
+.tops>li{height:100%;display:flex}
+.top{display:flex;align-items:center;gap:6px;padding:0 clamp(8px,.9vw,14px);height:100%;font:400 13px/1 var(--f-body);letter-spacing:.5px;text-transform:uppercase;color:#fff;white-space:nowrap}
+.top .car{width:8px;height:8px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg) translateY(-2px);opacity:.8;transition:transform .15s}
+.top[aria-expanded="true"]{color:var(--lime)}
+.top[aria-expanded="true"] .car{transform:rotate(225deg) translate(-2px,0)}
+.top:hover{color:var(--lime)}
+.right{margin-left:auto;display:flex;align-items:center;gap:0}
+.srch{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;margin-right:6px}
+.srch:hover{background:var(--raise)}
+.srch svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2}
+.util{display:flex;margin:0 10px 0 0;padding:0;list-style:none;font-size:12px}
+.util li+li{border-left:1px solid var(--line2)}
+.util a{display:block;padding:0 7px;color:#fff;line-height:1}
+.util a:hover{color:var(--lime)}
+.cta{display:inline-flex;align-items:center;font:700 14px/1 var(--f-body);letter-spacing:.2px;text-transform:uppercase;padding:9px 15px;border-radius:20px;border:1px solid #fff;color:#fff;white-space:nowrap}
+.cta:hover{background:rgba(255,255,255,.1)}
+.cta.fill{background:var(--lime);border-color:var(--lime);color:var(--ink);margin-left:8px}
+.cta.fill:hover{background:#e4ffbd}
+.burger{display:none;width:40px;height:40px;margin-left:10px;border-radius:8px;place-items:center}
+.burger i,.burger i::before,.burger i::after{display:block;width:22px;height:2px;background:#fff;position:relative;content:""}
+.burger i::before{position:absolute;top:-7px}.burger i::after{position:absolute;top:7px}
+.menu{position:absolute;left:0;right:0;top:100%;background:var(--panel);border-top:1px solid var(--line);border-bottom:1px solid var(--line2);box-shadow:0 30px 60px rgba(0,0,0,.55);padding:26px clamp(16px,3vw,48px) 30px;display:grid;gap:12px 36px;z-index:40}
+.menu[hidden]{display:none}
+.menu .col h3{margin:0 0 10px;font:500 11px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.menu ul{list-style:none;margin:0;padding:0}
+.menu li a{display:flex;align-items:baseline;gap:8px;padding:6px 8px;margin-inline:-8px;border-radius:6px;font-size:14px;color:#e9f0f7}
+.menu li a:hover{background:var(--raise);color:#fff}
+.menu li a small{display:block;font-size:12px;color:var(--dim);line-height:1.35;margin-top:2px;font-weight:400}
+.menu li a .dot{display:none;width:7px;height:7px;border-radius:50%;flex:none;transform:translateY(-1px)}
+.hl .menu li a[data-tag="res"] .dot{display:inline-block;background:var(--blue-t)}
+.hl .menu li a[data-tag="foot"] .dot{display:inline-block;background:var(--amber)}
+.hl .top[data-tag="res"]{box-shadow:inset 0 -2px 0 var(--blue-t)}
+.hl .top[data-tag="foot"]{box-shadow:inset 0 -2px 0 var(--amber)}
+.hl .util a[data-tag="res"]{color:var(--blue-t);text-decoration:underline;text-underline-offset:4px}
+
+/* ---------- Proposed bar (Linear-style) ---------- */
+.v2{background:rgba(13,30,50,.82);border-bottom:1px solid rgba(255,255,255,.08);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.v2 .navin{max-width:1300px;margin-inline:auto;padding-inline:15px;height:72px;display:flex;align-items:center;position:relative}
+.compare .v2 .navin{padding-top:10px}
+.v2 .logo{margin-right:0}
+.v2 .cluster{margin-left:28px;display:flex;align-items:center;gap:2px}
+.pill{display:inline-flex;align-items:center;height:32px;padding:0 12px;border-radius:999px;font:400 13px/1 var(--f-body);color:var(--nav-mut);white-space:nowrap;transition:color .12s,background .12s}
+.pill:hover,.pill[aria-expanded="true"]{color:#fff;background:rgba(255,255,255,.07)}
+.v2 .actions{display:flex;align-items:center;gap:8px;margin-left:auto}
+.gh,.gl{display:inline-flex;align-items:center;padding:9px 18px;border-radius:20px;font:700 14px/1 var(--f-body);letter-spacing:.2px;text-transform:uppercase;white-space:nowrap}
+.gh{color:#fff;border:1px solid #fff}
+.gh:hover{background:rgba(255,255,255,.1)}
+.gl{background:var(--lime);border:1px solid var(--lime);color:var(--ink)}
+.gl:hover{background:#e6ffbf}
+.v2 .burger{display:none}
+
+.pop{position:absolute;left:15px;top:64px;z-index:50;background:rgba(6,14,24,.975);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border:1px solid rgba(255,255,255,.1);border-radius:14px;box-shadow:0 8px 32px rgba(3,8,14,.85);overflow:hidden;opacity:0;visibility:hidden;transform:translateY(-4px);width:0;height:0;transition:opacity .16s,transform .16s,width .26s cubic-bezier(.2,.8,.2,1),height .26s cubic-bezier(.2,.8,.2,1),left .26s cubic-bezier(.2,.8,.2,1),visibility 0s .16s}
+.pop.on{opacity:1;visibility:visible;transform:none;transition-delay:0s}
+.pop.noanim{transition:opacity .16s,transform .16s,visibility 0s}
+.psec{position:absolute;top:0;right:0;width:var(--w);opacity:0;visibility:hidden;transition:opacity .14s}
+.psec.cur{opacity:1;visibility:visible}
+.pbody{display:grid;padding:8px}
+.pbody.stack{display:block;padding:14px 14px 10px}
+.pg{display:grid;gap:2px}
+.pcard{display:block;padding:12px 14px;border-radius:10px}
+.pcard b{display:block;font:500 13px/1.3 var(--f-body);color:#f7f9fb}
+.pcard span{display:block;margin-top:3px;font:400 13px/1.45 var(--f-body);color:var(--nav-mut);max-width:25ch}
+.pcard:hover{background:rgba(255,255,255,.05)}
+.pc{min-width:0}
+.pc>h4,.pl h4,.ps h4,.pi h4{margin:8px 14px 6px;font:500 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:#5f7790}
+.pl{border-left:1px solid rgba(255,255,255,.08);padding:4px 6px 4px 8px;margin-left:4px}
+.pl h4{margin:12px 12px 4px}
+.pl h4:first-child{margin-top:6px}
+.pl ul,.ps ul{list-style:none;margin:0;padding:0}
+.pl a,.ps a{display:block;padding:8px 12px;border-radius:8px;font:400 13px/1.3 var(--f-body);color:#cdd9e5}
+.pl a:hover,.ps a:hover{background:rgba(255,255,255,.05);color:#fff}
+.ps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 8px}
+.ps h4{margin-left:12px}
+.ps .uc2 ul{columns:2;column-gap:6px}
+.ps.eq{grid-template-columns:repeat(3,minmax(0,1fr))}
+.cb{display:grid;gap:0 8px;border-top:1px solid rgba(255,255,255,.08);margin-top:10px;padding-top:6px}
+.pi{border-top:1px solid rgba(255,255,255,.08);margin-top:10px;padding-top:6px}
+.chips{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px 4px}
+.chip2{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;font:400 13px/1.2 var(--f-body);color:#d8e3ee;min-width:0}
+.chip2:hover{background:rgba(255,255,255,.05);color:#fff}
+.chip2 i{flex:none;width:26px;height:26px;border-radius:7px;display:grid;place-items:center;font:600 11px/1 var(--f-body);font-style:normal;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08)}
+.chip2 span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip2.all{color:var(--lime)}
+.chip2.all i{background:transparent;border-style:dashed;border-color:rgba(213,253,161,.5);color:var(--lime)}
+.pf{border-top:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025)}
+.pf.twin{display:grid;grid-template-columns:1fr 1fr}
+.promo{display:flex;align-items:center;gap:16px;padding:16px 20px;min-width:0}
+.promo+.promo{border-left:1px solid rgba(255,255,255,.08)}
+.promo:hover{background:rgba(255,255,255,.04)}
+.art{flex:none;width:84px;height:56px;border-radius:9px;overflow:hidden;border:1px solid rgba(255,255,255,.12)}
+.art svg{display:block;width:100%;height:100%}
+.art.v{background:linear-gradient(135deg,#2d57e0,#10224a)}
+.art.i{background:linear-gradient(135deg,#1c8f86,#12304a)}
+.promo b{display:block;font:500 13px/1.3 var(--f-body);color:#f7f9fb}
+.promo .d{display:block;margin-top:2px;font:400 12.5px/1.4 var(--f-body);color:var(--nav-mut)}
+.promo .go{display:inline-block;margin-top:6px;font:500 12.5px/1 var(--f-body);color:var(--lime)}
+.pf.strip{display:flex;align-items:center;gap:14px;padding:13px 20px;font:400 13px/1.3 var(--f-body);color:var(--nav-mut)}
+.pf.strip .tg{font:600 12px/1 var(--f-body);color:#fff}
+.pf.strip .tx{flex:1;min-width:0}
+.pf.strip .more,.pf.strip .ctas a{color:var(--lime);font-weight:500;white-space:nowrap}
+.pf.strip .ctas{display:flex;gap:20px}
+.pf.strip a:hover{text-decoration:underline;text-underline-offset:3px}
+.hl .pcard[data-tag="res"],.hl .pl a[data-tag="res"]{box-shadow:inset 2px 0 0 var(--blue-t)}
+
+/* ---------- hero: sized to cloudinary.com (1300 container, 575px columns 120px apart, 70/40 padding, 564px tall at 1440) ---------- */
+.hero{background:var(--navy);padding:70px 0 40px}
+.hero .container{max-width:1300px;margin-inline:auto;padding-inline:15px;display:flex;justify-content:space-between;align-items:flex-start}
+.hcol{width:calc(50% - 60px);flex:none}
+.eyebrow{font:700 16px/19.2px var(--f-body);text-transform:uppercase;margin:0 0 25px}
+.hero h2{margin:0 0 25px;font:300 47px/56.4px var(--f-body);letter-spacing:0}
+.hero p{margin:30px 0 40px;font:400 21px/31.5px var(--f-body);max-width:none}
+.hbtns{display:flex;flex-wrap:wrap;margin-bottom:0}
+.hb{display:inline-flex;align-items:center;justify-content:center;font:700 18px/25.7143px var(--f-body);letter-spacing:.2px;text-transform:uppercase;padding:8px 32px;border-radius:27px;border:2px solid #fff;color:#fff;margin-right:20px;white-space:nowrap}
+.hb.fill{background:var(--blue);border-color:var(--blue)}
+.hb.fill:hover{background:#2aa6ff}.hb:not(.fill):hover{background:rgba(255,255,255,.1)}
+.hstats{display:flex;align-items:flex-end;gap:0 100px;margin-top:80px;color:var(--teal);font-weight:700}
+.hstats .it{display:flex;align-items:baseline}
+.hstats .n{font:700 36px/36px var(--f-body)}
+.hstats small{font:400 12px/1 var(--f-body);margin-left:6px;color:#fff}
+.hstats .ar{font:700 21px/31.5px var(--f-body)}
+.vwrap{width:100%;aspect-ratio:575/454;background:#172d47;border:1px solid rgba(255,255,255,.25);border-radius:12px;padding:20px}
+.vbox{position:relative;width:100%;height:100%;border-radius:8px;overflow:hidden;background:#0d1e32}
+.vbox video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .4s}
+.vbox video.ok{opacity:1}
+.fb{position:absolute;inset:0;display:grid;place-items:center}
+.fcard{width:79%;aspect-ratio:233/153;border-radius:6px;background:linear-gradient(135deg,#f8d4ea 0%,#dbe9ff 40%,#d4f4e6 100%);padding:7% 6%;display:flex;flex-direction:column;gap:7%}
+.fchip{align-self:center;display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:6px;background:linear-gradient(90deg,#7a5cf0,#3aa0ff 55%,#4ed6a8);color:#fff;font:500 clamp(11px,1.5vw,15px)/1 var(--f-body)}
+.fin{flex:1;background:rgba(255,255,255,.88);border-radius:6px;padding:10px 12px;color:#8b97a8;font:400 clamp(10px,1.2vw,13px)/1.3 var(--f-body);position:relative}
+.fin::after{content:"↑";position:absolute;right:8px;bottom:8px;width:20px;height:20px;border-radius:4px;background:#8cc2ff;color:#fff;display:grid;place-items:center;font-size:12px}
+
+/* drawer */
+.drawer{display:none;background:var(--panel);border-top:1px solid var(--line);padding:8px 16px 18px}
+.drawer.open{display:block}
+.drawer details{border-bottom:1px solid var(--line)}
+.drawer summary,.drawer .row{list-style:none;display:flex;justify-content:space-between;align-items:center;padding:15px 4px;font:500 15px var(--f-body);letter-spacing:.5px;text-transform:uppercase;cursor:pointer}
+.v2 .drawer summary,.v2 .drawer .row{text-transform:none;letter-spacing:0}
+.drawer summary::-webkit-details-marker{display:none}
+.drawer h4{margin:14px 4px 4px;font:500 11px var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.drawer li{list-style:none}.drawer ul{margin:0;padding:0}
+.drawer li a{display:block;padding:7px 4px;color:#dfe8f1;font-size:14px}
+.drawer .dctas{display:flex;gap:10px;flex-wrap:wrap;padding-top:16px}
+
+/* ---------- evidence ---------- */
+.why{padding-block:56px 40px}
+.kick{font:500 12px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin:0 0 14px}
+.why h2{margin:0 0 14px;font:300 clamp(30px,4vw,48px)/1.12 var(--f-body);text-wrap:balance;max-width:20em}
+.lede{max-width:44em;color:var(--mut);font-size:17px;margin:0 0 34px}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0;border:1px solid var(--line);border-radius:12px;background:var(--panel);margin-bottom:46px}
+.sum div{padding:20px 22px;border-right:1px solid var(--line)}
+.sum div:last-child{border-right:0}
+.sum h3{margin:0 0 8px;font:500 11px var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.sum p{margin:0;color:var(--mut);font-size:14px}
+.sum p b{color:var(--fg);font-weight:600}
+.big{font:300 40px/1 var(--f-body);color:var(--fg);margin-bottom:8px;font-variant-numeric:tabular-nums}
+.big i{font-style:normal;color:var(--teal)}
+.grp{margin:44px 0 12px;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px}
+.grp h3{margin:0;font:600 20px var(--f-body)}
+.grp p{margin:0;color:var(--dim);font-size:14px}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;min-width:1040px;font-size:14px}
+th{font:500 11px/1.3 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--dim);text-align:left;padding:12px 14px;border-bottom:1px solid var(--line2);white-space:nowrap}
+td{padding:16px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.l{min-width:190px}
+td.l b{display:block;font-weight:600;font-size:15px}
+td.l span{display:block;color:var(--dim);font-size:12.5px;margin-top:2px}
+.chip{display:inline-block;font:500 11px/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;padding:6px 9px;border-radius:5px;white-space:nowrap}
+.chip.res{background:rgba(0,149,255,.16);color:var(--blue-t)}
+.chip.foot{background:rgba(243,187,85,.16);color:var(--amber)}
+.chip.stay{background:rgba(96,207,183,.15);color:var(--teal)}
+.chip.watch{background:rgba(255,143,126,.16);color:var(--coral)}
+.num{font-variant-numeric:tabular-nums;font-family:var(--f-mono);font-size:13px;color:var(--fg);white-space:nowrap}
+.num s{display:block;text-decoration:none;color:var(--dim);font-size:11.5px}
+.bar{height:6px;border-radius:3px;background:var(--raise);margin-top:7px;min-width:110px;position:relative;overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--teal);min-width:1px;border-radius:3px}
+.sf{color:var(--mut);font-size:13px;max-width:23em}
+.sf b{color:var(--fg);font-weight:600}
+.why-t{color:#d6e1ec;font-size:13.5px;max-width:25em}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:24px;margin-top:24px}
+.box{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:24px 26px;min-width:0}
+.box h3{margin:0 0 6px;font:600 19px var(--f-body)}
+.box>p{margin:0 0 16px;color:var(--mut);font-size:14px}
+.box ul{margin:0 0 4px;padding-left:18px;color:var(--mut);font-size:14px}
+.box li{margin-bottom:6px}
+.box li b{color:var(--fg);font-weight:600}
+.box code{font:400 12.5px var(--f-mono);color:var(--lime);background:rgba(255,255,255,.06);padding:1px 6px;border-radius:4px}
+.rank{width:100%;min-width:0;font-size:13.5px}
+.rank td{padding:9px 6px;border-bottom:1px solid var(--line)}
+.rank td:first-child{padding-left:0}
+.rank td:last-child{padding-right:0;text-align:right}
+.hr{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:6px 0 10px;gap:2px}
+.hr i{display:block;height:100%}
+.keyl{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--mut);margin-bottom:6px}
+.keyl span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;background:var(--c)}
+.foot-mock{margin-top:40px}
+.fm{border:1px solid var(--line2);border-radius:12px;background:#08131f;padding:28px clamp(16px,3vw,40px);display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:26px 30px}
+.fm h4{margin:0 0 10px;font:500 11px var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.fm ul{list-style:none;margin:0;padding:0;font-size:13px;color:#c9d6e3}
+.fm li{padding:3px 0}
+.fm .new{color:var(--amber)}
+.fm h4.new{color:var(--amber)}
+.fm .new::after{content:" new";font:500 9px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--amber);border-radius:3px;padding:1px 4px;margin-left:6px}
+.fm .span2{grid-column:span 2}
+.fm .cols2{columns:2;column-gap:20px}
+.plain{max-width:46em}
+.plain h3{margin:34px 0 8px;font:600 19px var(--f-body)}
+.plain p,.plain li{color:var(--mut);font-size:15px}
+.plain li{margin-bottom:6px}.plain ul,.plain ol{padding-left:20px}
+.plain b{color:var(--fg);font-weight:600}
+.method{margin-top:54px;border-top:1px solid var(--line);padding-top:26px;font-size:13px;color:var(--dim);max-width:62em}
+.method h3{margin:0 0 10px;font:500 11px var(--f-mono);letter-spacing:.14em;text-transform:uppercase}
+.method li{margin-bottom:6px}.method ul{padding-left:18px;margin:0}
+
+@media (max-width:1100px){
+  .tops,.util,.right .cta.fill,.v2 .cluster,.v2 .actions .gl,.v2 .actions .pill{display:none}
+  .burger,.v2 .burger{display:grid}
+  .v2 .actions{margin-left:auto}
+  .hero .container{display:block}
+  .hcol{width:100%}
+  .vwrap{margin-top:48px;max-width:575px}
+  .stats{margin-left:0}
+  .pop{display:none}
+}
+@media (max-width:700px){.ctl{position:static}}
+@media (max-width:640px){
+  .srch{display:none}
+  .right .cta,.gh{padding:9px 14px;font-size:12px}
+  .logo{width:112px;margin-right:0}
+  .burger{margin-left:4px;flex:none}
+  .hero{padding-block:44px 32px}
+  .hero h2{font-size:36px;line-height:1.2}
+  .hero p{font-size:18px;line-height:1.5}
+  .hb{font-size:15px;padding:8px 22px;margin-bottom:12px}
+  .hstats{gap:12px 40px;flex-wrap:wrap}
+  .fm .span2{grid-column:auto}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="ctl">
+  <div class="ctl-in">
+    <h1>Main nav, slashed</h1>
+    <div class="seg" role="group" aria-label="Navigation version">
+      <button type="button" data-mode="today" aria-pressed="false">Today</button>
+      <button type="button" data-mode="proposed" aria-pressed="true">Proposed</button>
+      <button type="button" data-mode="compare" aria-pressed="false">Compare</button>
+    </div>
+    <label class="tog"><input type="checkbox" id="hl"> Show what moved</label>
+    <div class="legend" id="legend"><span>Moves into Resources</span><span class="f">Moves to footer</span></div>
+    <div class="stats" id="stats"></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <section class="stage" aria-label="Homepage prototype">
+    <div class="frame" id="frame">
+      <div class="chrome"><span class="dots"><i></i><i></i><i></i></span><span class="url">cloudinary.com</span></div>
+      <div id="navs"></div>
+      <section class="hero" id="hero">
+        <div class="container">
+          <div class="hcol">
+            <div class="eyebrow">Image and video API platform</div>
+            <h2>The World’s Visual Experiences Start Here</h2>
+            <p>AI-native platform and APIs for automating the entire image and video lifecycle at scale.</p>
+            <div class="hbtns"><a class="hb fill" href="#" data-stop>Sign up for free</a><a class="hb" href="#" data-stop>Contact sales</a></div>
+            <div class="hstats"><span class="it"><span class="n">4M</span><small>Developers</small></span><span class="it"><span class="n">13K</span><small>Brands</small></span><span class="ar">Agent-Ready</span></div>
+          </div>
+          <div class="hcol">
+            <div class="vwrap"><div class="vbox">
+              <div class="fb" aria-hidden="true"><div class="fcard"><div class="fchip">✦ Workflow Agent</div><div class="fin">Ask me anything…</div></div></div>
+              <video id="hv" muted loop playsinline autoplay preload="auto" aria-hidden="true"><source src="https://cloudinary-marketing-res.cloudinary.com/video/upload/w_1066/f_auto,q_auto/v1782449553/CL-HomepageSizzle2026-GFX_ReframeLoop.mp4" type="video/mp4"></video>
+            </div></div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <p class="hint"><b>Try it.</b> Hover Platform, Solutions and Resources. The panel resizes as you move between them. Compare stacks today’s bar over the proposed one, and “Show what moved” colour-codes every relocated link. The hero is built to the live homepage’s measurements.</p>
+    <div class="foot-mock">
+      <div class="grp"><h3>Proposed footer</h3><p>Guides, Glossary and Labs land here. URLs do not change, and every page still links to them, which keeps internal linking for search.</p></div>
+      <div class="fm" id="fm"></div>
+    </div>
+  </section>
+
+  <section class="why" id="why">
+    <p class="kick">The evidence</p>
+    <h2>Almost everything on the chopping block is quiet. Docs is the exception.</h2>
+    <p class="lede">I checked every nav destination against GA4 (Q3 2026) and Salesforce (trailing 12 months). Developers, Partners, Guides and Glossary together produced about 0.2% of Q3 signups. Documentation is the one removal with real traffic, so it stays in the Resources menu and also sits in the Platform menu.</p>
+
+    <div class="sum">
+      <div><h3>Header, today</h3><div class="big">6 + 3 + 2</div><p>Six menu items, three small links (Support, Docs, Login) and two CTAs, hiding <b id="s-old-links"></b> links.</p></div>
+      <div><h3>Header, proposed</h3><div class="big"><i>4 + 1 + 2</i></div><p>Platform, Solutions, Resources, Pricing, plus Login and the same two CTAs. <b id="s-new-links"></b> links behind them, including today’s six integrations and the image and video promos.</p></div>
+      <div><h3>What the CTAs earn</h3><div class="big"><i>57%</i></div><p>of the 47 Contact Sales leads tagged since Sep 16 came from a header button. Both CTAs stay.</p></div>
+    </div>
+
+    <div class="plain" style="max-width:56em;margin-bottom:12px">
+      <h3 style="margin-top:0">Why this nav is better</h3>
+      <ul>
+        <li><b>Four choices instead of six.</b> Header items go from <span id="w-h0"></span> to <span id="w-h1"></span>, and menu links from <span id="w-l0"></span> to <span id="w-l1"></span>. Distinct pages linked drop from <span id="w-u0"></span> to <span id="w-u1"></span>.</li>
+        <li><b>It follows what the data says.</b> Developers, Partners, Guides and Glossary together produced about 0.2% of Q3 signups. Pricing, the product pages and both CTAs are untouched.</li>
+        <li><b>Nothing is deleted.</b> Every page still has a home: Resources for Developers, Partners, Docs and Support, the footer for Guides, Glossary and Labs. URLs do not change and internal links to them remain.</li>
+        <li><b>One home for each thing.</b> Integrations was listed in four menus and Demos in two. Each now lives in one place.</li>
+        <li><b>It sells image and video.</b> Platform and Solutions carry a tracked contact-sales offer for each. Video is 12% of sales leads where a solution was picked, against 27% for DAM, so this is the gap leadership asked about.</li>
+        <li><b>It reads like the best B2B product sites.</b> Four pills on the left, Login and two CTAs on the right, and one panel that resizes between menus, the pattern linear.app uses.</li>
+        <li><b>Mobile gets simpler too.</b> The bar shows one CTA and a menu, and the drawer carries the same four sections.</li>
+        <li><b>It is testable.</b> One change, a 50/50 holdout, signups per 1,000 sessions as the measure, and Docs as the guardrail.</li>
+      </ul>
+    </div>
+
+    <div class="plain" style="max-width:56em;margin-bottom:12px">
+      <h3 style="margin-top:0">If you are asked</h3>
+      <p style="margin:0 0 6px"><b>“Why is Developers not in the top nav? We are a developer company.”</b></p>
+      <ul>
+        <li>It is not gone. Developers is first in Resources › Build and first in Solutions › By team. Image API, Video API, Docs and Community are one hover away.</li>
+        <li>Developers do not come in through the menu. Organic search and direct are 87% of sessions this year, AI assistants another 9%. /developers lands 4,971 sessions a quarter and 57 signups.</li>
+        <li>The 4M developers already in the product use Login and Docs. Docs lands 162,707 sessions and 3,133 signups a quarter, and it stays in Platform and Resources.</li>
+      </ul>
+      <p style="margin:18px 0 6px"><b>“Why did Partners come out? It was only added this year.”</b></p>
+      <ul>
+        <li>The directory is small. /solution-partners drew about 800 users in Q3 2026, 0.014% of the property’s 5.75M active users, and partner pages produced 3 signups.</li>
+        <li>Views rose, depth did not. /partners went from 1,480 views (Q3 2025) to 10,048 (Q3 2026), but time per user fell from 22s to 7s, and key events on the page went from 56 to 67. The directory itself went from 1,582 views (Q4 2025) to 1,927. Check the nav launch date with the web team before you say anything about lift.</li>
+        <li>Partner revenue runs through partner relationships. Partner channels are 34% of channel-tagged new-business MRR in Salesforce ($1.47M), and no nav link produced that.</li>
+        <li>Partners is still in Resources with the portal link, and the pages are unchanged.</li>
+      </ul>
+      <p style="margin:18px 0 6px"><b>“Why strip the nav down?”</b></p>
+      <ul>
+        <li>The goal is conversions. With four items, Contact Sales and Sign Up for Free are the only filled buttons in the bar. The header buttons already produce 27 of 47 tagged contact-sales leads.</li>
+        <li>Intuitive does not mean everything in view. A visitor needs three answers: what you sell (Platform), who it is for (Solutions), how to learn or get help (Resources). Pricing and the CTAs do the rest.</li>
+        <li>Resources lets us talk about Cloudinary beyond the product list and the self-selected use cases, without competing with them for space in the bar.</li>
+        <li>It is a hypothesis with a test: 50/50 holdout, signups per 1,000 sessions, Docs landing sessions as the guardrail.</li>
+      </ul>
+    </div>
+
+    <div id="tables"></div>
+
+    <div class="grp" style="margin-top:56px"><h3>Solutions use cases: ten down to six</h3><p>One column, shorter than By team. Ranked on Q3 2026 GA4 and 12 months of Salesforce leads by landing page.</p></div>
+    <div class="tw"><table><thead><tr><th>Use case</th><th>Verdict</th><th>GA4 Q3: views · users · engaged per user</th><th>Landing sessions → signups</th><th>SFDC leads, 12 mo (sales)</th><th>Read</th></tr></thead><tbody id="uc"></tbody></table></div>
+    <p class="why-t" style="max-width:56em;margin:12px 0 0">Signals are thin. Signups are 0 to 6 per page a quarter and Salesforce has 0 to 7 leads per page in a year, so engagement and strategy carry the ranking. Views of about 2 seconds per user on Third-Party Visual Content and Cloudinary as Infrastructure point to low-intent or non-human traffic, which is why Third-Party Visual Content is kept on strategy and flagged to re-check. The cut pages stay live and can move to the footer. Worth a look next: Startups (under By industry) produced 33 sales leads in 12 months, the most of any solutions page, and the video maturity assessment logged 27 key events.</p>
+
+    <div class="grp" style="margin-top:56px"><h3>Image and video promos in the menu</h3><p>Leadership wants more image and video contact-sales leads than DAM. The panels now carry the offer.</p></div>
+    <div class="two" style="margin-top:12px">
+      <div class="box">
+        <h3>Who asks for sales today</h3>
+        <p>Leads with reason “Sales”, by the solution picked on the contact form, Jul 1 – Oct 2 2026 (454 leads, 397 with a solution chosen).</p>
+        <div class="hr" id="sbar"></div>
+        <div class="keyl" id="sk"></div>
+        <table class="rank" id="stab" style="margin-top:8px"></table>
+      </div>
+      <div class="box">
+        <h3>What I put in the menu</h3>
+        <p>DAM gets no promo on purpose. Image and video each get a named offer.</p>
+        <ul>
+          <li><b>Platform panel, footer strip.</b> Two promos side by side, one for video and one for image, each ending in “Talk to a … expert”.</li>
+          <li><b>Solutions panel, footer strip.</b> One line for teams running image or video at scale, with a link for each.</li>
+          <li><b>Tracking.</b> Each link carries <code>utm_web_contact_source</code> with <code>nav_promo_video</code>, <code>nav_promo_image</code>, <code>nav_sol_video</code> or <code>nav_sol_image</code>. All fit the 20-character limit on the Salesforce field.</li>
+          <li><b>Needed before launch.</b> The contact form should open with the solution preselected. Today the Video and Image product-page CTAs send people to a bare /contact, and only 4 leads since Sep 16 carry a video or image page source. I could not confirm which URL parameter the form reads.</li>
+          <li><b>How to judge it.</b> Video and image share of sales leads with a solution picked. Today that is 12% and 24%. Agree a target with sales before launch.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="two">
+      <div class="box">
+        <h3>Integrations: the same six</h3>
+        <p>No integrations were added. The six already in the nav stay, shown once instead of in four menus. The directory is one click behind All integrations. Q3 landing sessions for context:</p>
+        <table class="rank" id="itab"></table>
+      </div>
+      <div class="box">
+        <h3>Partners: real revenue, wrong channel for a nav link</h3>
+        <p>New-business opportunities opened in the last 12 months by first-touch channel (Salesforce, MRR as labeled on the Opportunity). Partner channels are a third of tagged MRR. The nav page behind them sent 4,400 landing sessions and 3 signups last quarter, so the revenue comes from partner relationships, not from the link.</p>
+        <div class="keyl" id="pk"></div>
+        <div class="hr" id="pbar"></div>
+        <table class="rank" id="ptab"></table>
+      </div>
+    </div>
+
+    <div class="two">
+      <div class="box">
+        <h3>Contact Sales is the strongest named pipeline source</h3>
+        <p>Lead Source on 12 months of new-business opportunities. “Contact Us” is the form behind the CTA. Blank source is mostly self-serve upgrades, so it is left out.</p>
+        <table class="rank" id="ltab"></table>
+        <p style="margin:16px 0 8px">Who actually submits /contact (784 leads, 12 months):</p>
+        <div class="hr" id="rbar"></div>
+        <div class="keyl" id="rk"></div>
+      </div>
+      <div class="box">
+        <h3>Linear’s patterns, as used here</h3>
+        <p>Borrowed from linear.app’s header and dropdowns, kept to what a nav can carry.</p>
+        <ul>
+          <li><b>Right-clustered pills.</b> Four items beside Login and the two CTAs, in sentence case, muted until hovered.</li>
+          <li><b>One floating panel.</b> It resizes between menus instead of opening a new box each time.</li>
+          <li><b>Title plus two-line description</b> on the items that need explaining, plain links for the rest.</li>
+          <li><b>Footer strip inside the panel</b> for the one thing we want noticed, which here is the image and video offer.</li>
+          <li><b>Blur and a hairline border</b> instead of a full-width slab.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="plain">
+      <h3>Ideas for the Platform menu</h3>
+      <ul>
+        <li><b>Drop the two duplicates.</b> Demos now lives in Resources and Integrations in Solutions.</li>
+        <li><b>Lead with products.</b> Six cards in a 2 × 3 grid (Video, Image, Assets, MediaFlows, Moderation, Cloudinary AI), with Platform overview, Extensibility and Documentation as plain links. Product pages convert at 1.16% against 0.29% for /platform.</li>
+        <li><b>Use the strip.</b> The footer strip is the one place to say something. Right now it carries the video and image offers.</li>
+      </ul>
+      <h3>What I would test before shipping</h3>
+      <ol>
+        <li><b>Add a nav click event.</b> I could not find a nav-click report in GA4, so everything above compares destinations, not clicks. Two weeks of data on the current bar gives a real baseline.</li>
+        <li><b>Hold out the change.</b> Show the proposed bar to half of visitors. Primary metric is signups per 1,000 sessions. Guardrails are Documentation landing sessions and the share of /contact leads that are support requests.</li>
+        <li><b>Test the promos on their own.</b> Run the Platform strip with and without the video and image offers and compare video and image share of sales leads.</li>
+        <li><b>Watch search.</b> Check Search Console clicks to /guides/ and /glossary/ weekly for a month after the footer move.</li>
+      </ol>
+      <h3>Risks I would want you to know about</h3>
+      <ul>
+        <li><b>Docs.</b> It has 162,707 landing sessions and 3,133 signups a quarter, about 55 times the signups of the whole /developers section. Existing customers use that header link daily. It heads its own Docs and Community group, appears again in Platform, and the search icon stays.</li>
+        <li><b>Solutions.</b> It lands 34,787 sessions and 20 signups. It keeps today’s six integrations and is the next candidate after this round.</li>
+        <li><b>Blog and Customers.</b> Both have near-zero direct signups. I left them in Resources because they assist, and GA4’s landing view cannot show assists.</li>
+        <li><b>Dropped from the menu, still one click away.</b> SDK quick starts, the MCP server and the app gallery sit on /developers.</li>
+      </ul>
+    </div>
+
+    <div class="method">
+      <h3>How to read these numbers</h3>
+      <ul>
+        <li>GA4: property “[GA4] main (website+console)”, landing-page report, Jul 1 – Sep 30 2026, key event sign_up_successfully. Path filters match “contains”, so a family such as /guides/ includes every page under it. Pageview and user counts come from the pages-and-screens report for the same dates.</li>
+        <li>Landing pages show where a session started, not which nav link was clicked. A nav click starts from another page. Treat the visitor counts on /developers and /partners as the ceiling for nav use.</li>
+        <li>Salesforce: Lead.Last_Landing_Page__c begins with the path, created Oct 1 2025 – Oct 1 2026. Lead counts and GA4 signups are different populations and are not meant to reconcile. The lead-to-opportunity link is nearly empty (1 of 65,817 homepage-landing leads has a converted opportunity), so I could not trace landing page to pipeline.</li>
+        <li>Opportunity.Amount is labeled MRR in Salesforce. Channel figures cover New Business opportunities created in the same 12 months. 7,798 of 8,734 have no first-touch channel and are mostly self-serve.</li>
+        <li>Solution mix: Lead.Cloudinary_Form_Solution__c on leads with Reason_for_Contact_Us__c = Sales, created Jul 1 – Oct 2 2026. The field is mostly empty before July.</li>
+        <li>CTA split uses Lead.UTM_Web_CTA_Source__c from Sep 16 2026, the agreed measurement start. The field is cut to 20 characters, so “header” means values starting homepage_nav, pricing_page_nav, demos_page_nav or image_product_page_n.</li>
+        <li>support.cloudinary.com sits outside the pages I pulled, so Support has no GA4 row. The nav list was read from the live homepage on Oct 2 2026. The hero video loads from cloudinary.com when the page is allowed to fetch it; otherwise the drawn card shows. Panel copy for the promos and card descriptions is my draft and needs review.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+var CLOUD='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 96.77"><title>Cloudinary</title><path d="M160.53,30.41a17.14,17.14,0,0,1,13.56,6.7.69.69,0,0,0,1,.11l5.71-4.55a.71.71,0,0,0,.11-1,26,26,0,0,0-20.61-10.13c-14.91,0-27,12.85-27,28.65s12.13,28.65,27,28.65A25.85,25.85,0,0,0,180.9,68.72a.69.69,0,0,0-.12-1l-5.7-4.5a.71.71,0,0,0-1,.11A17.26,17.26,0,0,1,160.53,70c-10.19,0-18.16-8.7-18.16-19.79S150.34,30.41,160.53,30.41Z"/><path d="M188.27,19.91h7.16a.71.71,0,0,1,.71.71V77.4a.7.7,0,0,1-.7.7h-7.16a.71.71,0,0,1-.71-.71V20.62A.7.7,0,0,1,188.27,19.91Z"/><path d="M220.54,39.55c-9.49,0-19.09,6.72-19.09,19.57,0,11.29,8.21,19.81,19.09,19.81s19.17-8.52,19.17-19.81S231.47,39.55,220.54,39.55Zm10.53,19.57c0,6.52-4.53,11.44-10.53,11.44S210.1,65.64,210.1,59.12s4.49-11.2,10.44-11.2S231.07,52.73,231.07,59.12Z"/><path d="M278.3,40.37h-7.16a.7.7,0,0,0-.71.7v19c0,7.42-5.12,10.05-9.51,10.05-3.88,0-7.79-2.93-7.79-9.48V41.07a.7.7,0,0,0-.71-.7h-7.16a.7.7,0,0,0-.7.7v20.5c0,11.25,5.09,17.44,14.34,17.44,3.36,0,8.8-1.93,10.84-6.19l.69.14V77.4a.71.71,0,0,0,.71.71h7.16a.71.71,0,0,0,.71-.71V41.07A.7.7,0,0,0,278.3,40.37Z"/><path d="M322.27,19.91H315.1a.7.7,0,0,0-.7.71V46l-.44-.7c-2.18-3.51-6.87-5.78-11.95-5.78-8.76,0-17.62,6.75-17.62,19.65,0,11.25,7.61,19.73,17.69,19.73,3.84,0,9.25-1.54,11.88-5.86l.44-.72V77.4a.7.7,0,0,0,.7.71h7.17a.7.7,0,0,0,.7-.71V20.62A.7.7,0,0,0,322.27,19.91Zm-8,39.21a11,11,0,0,1-10.75,11.36c-5.86,0-10.45-5-10.45-11.36s4.59-11.2,10.45-11.2A11,11,0,0,1,314.24,59.12Z"/><path d="M333,40.37h7.16a.7.7,0,0,1,.7.7V77.4a.7.7,0,0,1-.7.7H333a.71.71,0,0,1-.71-.71V41.07A.71.71,0,0,1,333,40.37Z"/><path d="M336.61,21.06a5.57,5.57,0,0,0-5.69,5.57,5.64,5.64,0,0,0,5.69,5.58,5.54,5.54,0,0,0,5.61-5.58A5.48,5.48,0,0,0,336.61,21.06Z"/><path d="M370.35,39.55c-3.14,0-8.72,1.69-10.85,6.19l-.69-.14V41.07a.7.7,0,0,0-.71-.7h-7.16a.7.7,0,0,0-.7.7V77.4a.7.7,0,0,0,.7.71h7.16a.71.71,0,0,0,.71-.71v-19c0-7.36,5.12-10,9.51-10,3.88,0,7.79,2.91,7.79,9.4V77.4a.71.71,0,0,0,.71.71H384a.71.71,0,0,0,.71-.71V56.91C384.69,45.72,379.59,39.55,370.35,39.55Z"/><path d="M427.48,40.37h-7.16a.7.7,0,0,0-.71.7v5l-.43-.7c-2.19-3.51-6.88-5.78-12-5.78-8.75,0-17.62,6.75-17.62,19.65,0,11.25,7.61,19.73,17.7,19.73,3.83,0,9.24-1.54,11.88-5.86l.43-.72V77.4a.71.71,0,0,0,.71.71h7.16a.7.7,0,0,0,.7-.71V41.07A.7.7,0,0,0,427.48,40.37Zm-8,18.75A11,11,0,0,1,408.7,70.48c-5.86,0-10.44-5-10.44-11.36s4.58-11.2,10.44-11.2A11,11,0,0,1,419.46,59.12Z"/><path d="M460.15,40.5a13.66,13.66,0,0,0-5.14-1c-4.76,0-8.22,2.85-10,8.25l-.64-.09V41.07a.7.7,0,0,0-.71-.7h-7.16a.7.7,0,0,0-.71.7V77.4a.71.71,0,0,0,.71.71h7.24a.7.7,0,0,0,.7-.71V65c0-14.8,5.91-17,9.44-17a11,11,0,0,1,4.33.9.72.72,0,0,0,.61,0,.7.7,0,0,0,.36-.48l1.42-7.11A.71.71,0,0,0,460.15,40.5Z"/><path d="M499.88,40.68a.69.69,0,0,0-.59-.31h-7.71a.72.72,0,0,0-.66.45L481.59,65l-9.42-24.18a.72.72,0,0,0-.66-.45h-7.86a.69.69,0,0,0-.58.31.7.7,0,0,0-.07.66l14,34.38-7.73,20.09a.71.71,0,0,0,.66,1h7.5a.69.69,0,0,0,.65-.45l21.86-55A.69.69,0,0,0,499.88,40.68Z"/><path d="M97.91,28.11A40.38,40.38,0,0,0,59.73,0,39.62,39.62,0,0,0,24.6,20.87a29.88,29.88,0,0,0-7.21,56.56l.75.34h.05v-8.5a22.29,22.29,0,0,1,9.29-41.16l2.1-.22L30.5,26A32.15,32.15,0,0,1,59.73,7.57a32.7,32.7,0,0,1,31.55,25L92,35.43l3,0a18.53,18.53,0,0,1,18.15,18.46c0,7.05-4.07,12.82-11,15.74v8.06l.5-.16c11.14-3.65,18.06-12.71,18.06-23.64A26.19,26.19,0,0,0,97.91,28.11Z"/><path d="M45.07,76.79l1.66,1.66a.33.33,0,0,1-.23.56H33.4a6,6,0,0,1-6-6V47.57a.33.33,0,0,0-.33-.33H24.27a.33.33,0,0,1-.24-.56L35.15,35.56a.33.33,0,0,1,.47,0L46.73,46.68a.33.33,0,0,1-.23.56H43.66a.34.34,0,0,0-.34.33v25A6,6,0,0,0,45.07,76.79Z"/><path d="M69.64,76.79l1.67,1.66a.33.33,0,0,1-.24.56H58a6,6,0,0,1-6-6V54a.34.34,0,0,0-.33-.34H48.84a.33.33,0,0,1-.23-.56L59.72,42a.33.33,0,0,1,.47,0L71.31,53.08a.33.33,0,0,1-.24.56H68.23a.34.34,0,0,0-.33.34V72.57A6,6,0,0,0,69.64,76.79Z"/><path d="M94.22,76.79l1.66,1.66a.33.33,0,0,1-.23.56H82.54a6,6,0,0,1-6-6V60.38a.33.33,0,0,0-.33-.33H73.41a.33.33,0,0,1-.23-.57L84.3,48.37a.32.32,0,0,1,.46,0L95.88,59.48a.33.33,0,0,1-.23.57H92.8a.33.33,0,0,0-.33.33V72.57A6,6,0,0,0,94.22,76.79Z"/></svg>';
+
+var G18=[
+['AI','/guides/ai/cropping-images-using-ai'],['Automatic Image Cropping','/guides/automatic-image-cropping/auto-image-crop-use-cases-features-and-best-practices'],['Image Formats','/guides/image-formats/automatically-change-format-to-jpg'],['Bulk Image Resize','/guides/bulk-image-resize/bulk-image-resize-in-css-javascript-python-java-node-js-and-other-languages'],['Digital Asset Management','/guides/digital-asset-management/what-is-digital-asset-management'],['E-Commerce Platform','/guides/e-commerce-platform/select-the-right-e-commerce-platform-for-your-needs'],['Enterprise','/guides/enterprise/top-image-api-for-enterprises'],['Front-End Development','/guides/front-end-development/front-end-development-the-complete-guide'],['Image Effects','/guides/image-effects/how-to-create-a-progress-bar-for-asset-uploads'],['Image Generation','/guides/image-generation/image-generation-api'],['Marketing Videos','/guides/marketing-videos/12-types-of-marketing-videos-and-10-ways-to-make-them-great'],['Models','/guides/models/ai-image-generation-models'],['Responsive Images','/guides/responsive-images/4-techniques-for-creating-responsive-images-with-bootstrap'],['Video Accessibility','/products/video/accessibility'],['Video Effects','/guides/video-effects/simplify-mobile-video-optimization'],['Video Formats','/guides/video-formats/top-six-web-video-formats-of-2023'],['Web Performance','/guides/web-performance/web-performance-what-is-it-trends-and-insights-for-2024'],['WordPress Plugin','/guides/wordpress-plugin/optimize-video-for-wordpress-a-guide-for-seamless-performance']];
+
+/* ---------- TODAY: read from the live homepage ---------- */
+var TODAY={
+ tops:[
+  {l:'Platform',cols:[
+    {h:'Products',it:[['Video','/products/video','','Scale high-performing video faster with AI-powered automation'],['Image','/products/image','','Automated customization and optimized delivery of images'],['Assets','/products/digital_asset_management','','AI-powered Digital Asset Management'],['MediaFlows','/products/mediaflows','','Low-code workflow automation for image and video'],['Moderation','/products/moderation','','AI-powered brand aligned moderation']]},
+    {h:'Platform',it:[['Platform Overview','/platform'],['Cloudinary AI','/products/cloudinary_ai'],['Demos','/demos'],['Integrations','/integrations'],['Extensibility','/partners/extensibility']]}]},
+  {l:'Solutions',cols:[
+    {h:'Integrations',it:[['AWS','/integrations/aws'],['Shopify','/integrations/shopify'],['Contentful','/integrations/contentful'],['Syndigo','/integrations/syndigo'],['Figma','/documentation/figma_integration'],['WordPress','/integrations/wordpress'],['All Integrations →','/integrations']]},
+    {h:'Use cases',it:[['Composable Architecture','/solutions/composable-architecture'],['DAM for Video','/products/digital_asset_management/dam-video'],['Headless DAM','/solutions/headless'],['Performance Optimization','/solutions/performance_optimization'],['Third-Party Visual Content','/solutions/third-party-visual-content'],['Cloudinary as Infrastructure','/solutions/cloudinary-as-infrastructure'],['Creative Automation','/solutions/creative-automation'],['Immersive 3D','/solutions/3d']]},
+    {h:'Teams',it:[['E-commerce','/solutions/e-commerce-teams'],['CX Professionals','/solutions/cx-professionals'],['Developers','/developers','res'],['IT Teams','/solutions/it-teams'],['Marketers','/solutions/marketing-teams'],['Product and Engineering','/solutions/product-and-engineering-teams'],['Content Operations','/solutions/content-operations-teams'],['AI Agents','/agents'],['Agentic Commerce','/solutions/agentic-commerce']]},
+    {h:'Industries',it:[['Media & Entertainment','/solutions/industries/media_entertainment'],['Retail','/solutions/retail'],['Travel & Hospitality','/solutions/industries/travel_hospitality'],['Nonprofits','/solutions/industries/cloudinary-for-nonprofits'],['Startups','/solutions/cloudinary-for-startups'],['Enterprise','/enterprise'],['Over 70 industries use Cloudinary','/contact']]}]},
+  {l:'Developers',tag:'res',cols:[
+    {h:'Build',it:[['Developer Overview','/developers','res'],['Image API','/image-api','res'],['Video API','/video_api','res'],['Documentation','/documentation','res'],['Integrations','/integrations','res'],['Community','/developers/community','res'],['MCP Server','/documentation/cloudinary_llm_mcp','res']]},
+    {h:'Get started',it:[['Get Started →','#get-started','res'],['Manage Your Assets →','#manage-assets','res'],['Developer Onboarding','/documentation/dev_kickstart','res'],['SDK Quick Starts','/documentation/sdk_quickstarts','res'],['Video Player API','/documentation/video_player_api_reference','res'],['Video Tutorial Library','/documentation/tutorial_screencasts','res'],['App Gallery','https://app-gallery.cloudinary.com/','res']]},
+    {h:'Documentation',it:[['Upload','/documentation/upload_images','res'],['Transform & Customize','/documentation/transformations_intro','res'],['Manage & Analyze','/documentation/asset_management','res'],['Optimize & Deliver','/documentation/image_delivery_options','res'],['AI in Action','/documentation/ai_in_action','res']]}]},
+  {l:'Resources',cols:[
+    {h:'Learn',it:[['Blog','/blog'],['Customers','/customers'],['Demos','/demos'],['Events','/events'],['Glossary','/glossary','foot'],['Labs','/labs','foot'],['Resource Library','/resources'],['Tools','/tools']]},
+    {h:'Support and services',it:[['Documentation','/documentation','res'],['Knowledge Base','https://support.cloudinary.com/','res'],['Technical Support','https://support.cloudinary.com/','res'],['Professional Services','/professional-services'],['Education Services','/education-services'],['Education & Training','https://training.cloudinary.com/']]},
+    {h:'Guides',cols2:true,it:G18.map(function(g){return [g[0],g[1],'foot']})}]},
+  {l:'Partners',tag:'res',cols:[{h:'Partners',it:[['Find a Solution Partner','/solution-partners','res','Implementation partner directory'],['Find a Technology Partner','/integrations','res','Integrations directory'],['Explore Extensibility','/partners/extensibility','res','Connect to any tech stack or solution'],['Become a Partner','/partners','res'],['Partner Portal','https://cloudinary.partnerstack.com/','res']]}]},
+  {l:'Pricing',href:'/pricing'}
+ ],
+ util:[['Support','https://support.cloudinary.com/','res'],['Docs','/documentation','res'],['Login','/users/login']]
+};
+
+/* ---------- PROPOSED: Linear-style panels. card = [title, description, href, tag] ---------- */
+var UTM='?utm_web_contact_source=';
+var INTS=[['Shopify','/integrations/shopify'],['AWS','/integrations/aws'],['Syndigo','/integrations/syndigo'],['Contentful','/integrations/contentful'],['WordPress','/integrations/wordpress'],['Figma','/documentation/figma_integration']];
+function ini(n){var w=n.split(' ');return w.length>1?(w[0][0]+w[1][0]):n.slice(0,2)}
+var PROPOSED={
+ platform:{l:'Platform',w:960,cols:'minmax(0,1fr) 236px',body:[
+   {k:'grid',cols:2,items:[
+     ['Video','Scale high-performing video faster with AI-powered automation','/products/video'],
+     ['Image','Automated customization and optimized delivery of images','/products/image'],
+     ['Assets','AI-powered digital asset management','/products/digital_asset_management'],
+     ['MediaFlows','Low-code workflow automation for image and video','/products/mediaflows'],
+     ['Moderation','AI-powered, brand-aligned moderation for images and video','/products/moderation'],
+     ['Cloudinary AI','AI-powered capabilities across the whole platform','/products/cloudinary_ai']]},
+   {k:'links',groups:[{items:[['Platform Overview','/platform'],['Extensibility','/partners/extensibility'],['Documentation','/documentation']]}]}],
+   foot:{k:'twin',items:[
+     {art:'v',title:'Video, at enterprise scale',desc:'Adaptive streaming, auto-reframing and AI automation for every screen.',cta:'Talk to a video expert',href:'/contact'+UTM+'nav_promo_video'},
+     {art:'i',title:'Image, at enterprise scale',desc:'Automated customization and optimized delivery on every device.',cta:'Talk to an image expert',href:'/contact'+UTM+'nav_promo_image'}]}},
+ solutions:{l:'Solutions',w:960,layout:'stack',body:[
+   {k:'solcols',cols:[
+     {h:'By team',items:[['Developers','/developers'],['E-commerce','/solutions/e-commerce-teams'],['Marketers','/solutions/marketing-teams'],['Product and Engineering','/solutions/product-and-engineering-teams'],['IT Teams','/solutions/it-teams'],['Content Operations','/solutions/content-operations-teams'],['CX Professionals','/solutions/cx-professionals']]},
+     {h:'By use case',items:[['AI Agents','/agents'],['Composable Architecture','/solutions/composable-architecture'],['Third-Party Visual Content','/solutions/third-party-visual-content'],['DAM for Video','/products/digital_asset_management/dam-video'],['Creative Automation','/solutions/creative-automation'],['Headless DAM','/solutions/headless']]},
+     {h:'By industry',items:[['Retail','/solutions/retail'],['Media & Entertainment','/solutions/industries/media_entertainment'],['Travel & Hospitality','/solutions/industries/travel_hospitality'],['Nonprofits','/solutions/industries/cloudinary-for-nonprofits'],['Startups','/solutions/cloudinary-for-startups'],['Enterprise','/enterprise']]}]},
+   {k:'ints',items:INTS,all:['See all','/integrations']}],
+   foot:{k:'sol',text:'Running image or video at scale? Talk to the team that builds it.',ctas:[['Video','/contact'+UTM+'nav_sol_video'],['Image','/contact'+UTM+'nav_sol_image']]}},
+ resources:{l:'Resources',w:960,layout:'stack',body:[
+   {k:'linkrow',cols:[
+     {h:'Docs and Community',items:[['Documentation','/documentation','res'],['Community','/developers/community','res'],['Events','/events']]},
+     {h:'Partners',items:[['Find a Solution Partner','/solution-partners','res'],['Find a Technology Partner','/integrations','res'],['Become a Partner','/partners','res'],['Partner Portal','https://cloudinary.partnerstack.com/','res']]},
+     {h:'Support',items:[['Support and Knowledge Base','https://support.cloudinary.com/','res'],['Professional Services','/professional-services'],['Education and Training','https://training.cloudinary.com/']]}]},
+   {k:'cardband',cols:'1fr 2fr',blocks:[
+     {head:'Build',n:1,items:[['Developers','SDKs, the MCP server, app gallery and quick starts','/developers','res'],['Image API','Add optimized images to your website or app in minutes','/image-api','res'],['Video API','Add video to your website or app in minutes','/video_api','res']]},
+     {head:'Learn',n:2,flow:true,items:[['Tools','Free image and video tools that run in the browser','/tools'],['Blog','Articles and product updates','/blog'],['Customers','How teams use Cloudinary','/customers'],['Demos','See transformations live','/demos'],['Resource Library','Reports, ebooks and guides in one place','/resources']]}]}],
+   foot:{k:'strip',tag:'Build',text:'Connect AI agents to your media library with the Cloudinary MCP server',cta:['Learn more','/documentation/cloudinary_llm_mcp']}}
+};
+var ORDER=['platform','solutions','resources'];
+
+function linksOf(P){
+  var out=[];
+  P.body.forEach(function(c){
+    if(c.k==='grid')c.items.forEach(function(i){out.push(i[2])});
+    if(c.k==='links')c.groups.forEach(function(g){g.items.forEach(function(i){out.push(i[1])})});
+    if(c.k==='solcols'||c.k==='linkrow')c.cols.forEach(function(g){g.items.forEach(function(i){out.push(i[1])})});
+    if(c.k==='cardband')c.blocks.forEach(function(b){b.items.forEach(function(i){out.push(i[2])})});
+    if(c.k==='ints'){c.items.forEach(function(i){out.push(i[1])});out.push(c.all[1]);}
+  });
+  var f=P.foot;
+  if(f){ if(f.k==='twin')f.items.forEach(function(i){out.push(i.href)}); if(f.k==='sol')f.ctas.forEach(function(i){out.push(i[1])}); if(f.k==='strip')out.push(f.cta[1]); }
+  return out;
+}
+function statsOf(m){
+  var links=0,set={},top=0,util=0;
+  if(m==='today'){
+    TODAY.tops.forEach(function(t){top++;if(t.href){set[t.href]=1;return;}t.cols.forEach(function(c){c.it.forEach(function(i){links++;set[i[1]]=1;});});});
+    TODAY.util.forEach(function(u){util++;set[u[1]]=1;});
+  }else{
+    ORDER.forEach(function(k){top++;linksOf(PROPOSED[k]).forEach(function(h){links++;set[h]=1;});});
+    top++;set['/pricing']=1;util=1;set['/users/login']=1;
+  }
+  return {top:top,util:util,links:links,uniq:Object.keys(set).length};
+}
+var S0=statsOf('today'),S1=statsOf('proposed');
+function todayCount(l){var n=0;TODAY.tops.forEach(function(t){if(t.l===l&&t.cols)t.cols.forEach(function(c){n+=c.it.length})});return n}
+document.getElementById('stats').innerHTML=
+ '<div class="stat">Header items<b>'+(S0.top+S0.util+2)+' <i>→ '+(S1.top+S1.util+2)+'</i></b></div>'+
+ '<div class="stat">Links in menus<b>'+S0.links+' <i>→ '+S1.links+'</i></b></div>'+
+ '<div class="stat">Distinct pages linked<b>'+S0.uniq+' <i>→ '+S1.uniq+'</i></b></div>';
+document.getElementById('s-old-links').textContent=S0.links;
+document.getElementById('s-new-links').textContent=S1.links;
+[['w-h0',S0.top+S0.util+2],['w-h1',S1.top+S1.util+2],['w-l0',S0.links],['w-l1',S1.links],['w-u0',S0.uniq],['w-u1',S1.uniq]].forEach(function(p){document.getElementById(p[0]).textContent=p[1]});
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+
+/* ---------- Today renderer ---------- */
+function itemHtml(i){
+  return '<li><a href="#" data-stop data-tag="'+(i[2]||'')+'" title="'+esc(i[1])+'"><span class="dot"></span><span>'+esc(i[0])+(i[3]?'<small>'+esc(i[3])+'</small>':'')+'</span></a></li>';
+}
+function menuHtml(t,idx,inst){
+  var h='<div class="menu" id="m-'+inst+'-'+idx+'" hidden style="grid-template-columns:repeat('+t.cols.length+',minmax(0,1fr))">';
+  t.cols.forEach(function(c){
+    h+='<div class="col"><h3>'+esc(c.h)+'</h3><ul'+(c.cols2?' style="columns:2;column-gap:20px"':'')+'>'+c.it.map(itemHtml).join('')+'</ul></div>';
+  });
+  return h+'</div>';
+}
+function drawerHtml(secs,util,cls){
+  var h='<div class="drawer">';
+  secs.forEach(function(s){
+    if(s.row){h+='<div class="row">'+esc(s.l)+'</div>';return;}
+    h+='<details><summary>'+esc(s.l)+'<span>+</span></summary>';
+    s.groups.forEach(function(g){h+=(g.h?'<h4>'+esc(g.h)+'</h4>':'')+'<ul>'+g.items.map(function(i){return '<li><a href="#" data-stop>'+esc(i)+'</a></li>'}).join('')+'</ul>';});
+    h+='</details>';
+  });
+  h+='<div class="dctas">'+util.map(function(u){return '<a class="cta" href="#" data-stop>'+esc(u)+'</a>'}).join('')+'<a class="cta" href="#" data-stop>Contact sales</a><a class="cta fill" href="#" data-stop>Sign up for free</a></div></div>';
+  return h;
+}
+function todayHtml(inst,label){
+  var n=TODAY,h='<div class="navwrap" data-inst="'+inst+'"><span class="tagline">'+label+'</span><div class="nav">';
+  h+='<a class="logo" href="#" data-stop aria-label="Cloudinary">'+CLOUD+'</a><ul class="tops">';
+  n.tops.forEach(function(t,i){
+    if(t.href) h+='<li><a class="top" href="#" data-stop>'+esc(t.l)+'</a></li>';
+    else h+='<li><button type="button" class="top" data-i="'+i+'" data-tag="'+(t.tag||'')+'" aria-expanded="false" aria-controls="m-'+inst+'-'+i+'">'+esc(t.l)+'<span class="car"></span></button></li>';
+  });
+  h+='</ul><div class="right"><button type="button" class="srch" aria-label="Search"><svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6.5"/><path d="M15 15l6 6"/></svg></button><ul class="util">';
+  n.util.forEach(function(u){h+='<li><a href="#" data-stop data-tag="'+(u[2]||'')+'">'+esc(u[0])+'</a></li>';});
+  h+='</ul><a class="cta" href="#" data-stop>Contact sales</a><a class="cta fill" href="#" data-stop>Sign up for free</a><button type="button" class="burger" aria-label="Menu" aria-expanded="false"><i></i></button></div></div>';
+  n.tops.forEach(function(t,i){if(!t.href)h+=menuHtml(t,i,inst);});
+  var secs=n.tops.map(function(t){return t.href?{l:t.l,row:1}:{l:t.l,groups:t.cols.map(function(c){return {h:c.h,items:c.it.map(function(i){return i[0]})}})}});
+  h+=drawerHtml(secs,n.util.map(function(u){return u[0]}));
+  return h+'</div>';
+}
+
+/* ---------- Proposed renderer ---------- */
+var ART={
+ v:'<svg viewBox="0 0 84 56"><circle cx="42" cy="23" r="12" fill="rgba(255,255,255,.16)"/><path d="M38 16.5l11 6.5-11 6.5z" fill="#fff"/><rect x="10" y="44" width="64" height="3" rx="1.5" fill="rgba(255,255,255,.25)"/><rect x="10" y="44" width="36" height="3" rx="1.5" fill="#d5fda1"/><circle cx="46" cy="45.5" r="3" fill="#fff"/></svg>',
+ i:'<svg viewBox="0 0 84 56"><circle cx="64" cy="14" r="5" fill="rgba(255,255,255,.55)"/><path d="M0 50l22-24 14 14 12-10 36 24v2H0z" fill="rgba(255,255,255,.2)"/><rect x="18" y="11" width="48" height="34" rx="2" fill="none" stroke="#fff" stroke-width="1.4" stroke-dasharray="4 3"/><rect x="15.5" y="8.5" width="5" height="5" fill="#fff"/><rect x="63.5" y="8.5" width="5" height="5" fill="#fff"/><rect x="15.5" y="42.5" width="5" height="5" fill="#fff"/><rect x="63.5" y="42.5" width="5" height="5" fill="#fff"/></svg>'
+};
+function cardHtml(i){return '<a class="pcard" href="#" data-stop data-tag="'+(i[3]||'')+'" title="'+esc(i[2])+'"><b>'+esc(i[0])+'</b><span>'+esc(i[1])+'</span></a>'}
+function colHtml(c){
+  if(c.k==='grid') return '<div class="pc">'+(c.head?'<h4>'+esc(c.head)+'</h4>':'')+'<div class="pg" style="grid-template-columns:repeat('+c.cols+',minmax(0,1fr))">'+c.items.map(cardHtml).join('')+'</div></div>';
+  if(c.k==='links') return '<div class="pl">'+c.groups.map(function(g){return (g.head?'<h4>'+esc(g.head)+'</h4>':'')+'<ul>'+g.items.map(function(i){return '<li><a href="#" data-stop data-tag="'+(i[2]||'')+'" title="'+esc(i[1])+'">'+esc(i[0])+'</a></li>'}).join('')+'</ul>'}).join('')+'</div>';
+  if(c.k==='solcols') return '<div class="ps">'+c.cols.map(function(g){return '<div'+(g.two?' class="uc2"':'')+'><h4>'+esc(g.h)+'</h4><ul>'+g.items.map(function(i){return '<li><a href="#" data-stop title="'+esc(i[1])+'">'+esc(i[0])+'</a></li>'}).join('')+'</ul></div>'}).join('')+'</div>';
+  if(c.k==='linkrow') return '<div class="ps eq">'+c.cols.map(function(g){return '<div><h4>'+esc(g.h)+'</h4><ul>'+g.items.map(function(i){return '<li><a href="#" data-stop data-tag="'+(i[2]||'')+'" title="'+esc(i[1])+'">'+esc(i[0])+'</a></li>'}).join('')+'</ul></div>'}).join('')+'</div>';
+  if(c.k==='cardband') return '<div class="cb" style="grid-template-columns:'+c.cols+'">'+c.blocks.map(function(b){return '<div class="pc"><h4>'+esc(b.head)+'</h4><div class="pg" style="grid-template-columns:repeat('+b.n+',minmax(0,1fr))'+(b.flow?';grid-template-rows:repeat('+Math.ceil(b.items.length/b.n)+',auto);grid-auto-flow:column':'')+'">'+b.items.map(cardHtml).join('')+'</div></div>'}).join('')+'</div>';
+  if(c.k==='ints') return '<div class="pi"><h4>Integrations</h4><div class="chips">'+c.items.map(function(i){return '<a class="chip2" href="#" data-stop title="'+esc(i[1])+'"><i>'+esc(ini(i[0]))+'</i><span>'+esc(i[0])+'</span></a>'}).join('')+'<a class="chip2 all" href="#" data-stop title="'+c.all[1]+'"><i>→</i><span>'+esc(c.all[0])+'</span></a></div></div>';
+  return '';
+}
+function footHtml(f){
+  if(f.k==='twin') return '<div class="pf twin">'+f.items.map(function(p){return '<a class="promo" href="#" data-stop title="'+esc(p.href)+'"><span class="art '+p.art+'">'+ART[p.art]+'</span><span><b>'+esc(p.title)+'</b><span class="d">'+esc(p.desc)+'</span><span class="go">'+esc(p.cta)+' →</span></span></a>'}).join('')+'</div>';
+  if(f.k==='strip') return '<div class="pf strip"><span class="tg">'+esc(f.tag)+'</span><span class="tx">'+esc(f.text)+'</span><a class="more" href="#" data-stop title="'+f.cta[1]+'">'+esc(f.cta[0])+' →</a></div>';
+  if(f.k==='sol') return '<div class="pf strip"><span class="tx">'+esc(f.text)+'</span><span class="ctas">'+f.ctas.map(function(c){return '<a href="#" data-stop title="'+esc(c[1])+'">Talk about '+c[0].toLowerCase()+' →</a>'}).join('')+'</span></div>';
+  return '';
+}
+function secHtml(k){
+  var P=PROPOSED[k];
+  return '<div class="psec" data-p="'+k+'" style="--w:'+P.w+'px"><div class="pbody '+(P.layout||'row')+'"'+(P.cols?' style="grid-template-columns:'+P.cols+'"':'')+'>'+P.body.map(colHtml).join('')+'</div>'+(P.foot?footHtml(P.foot):'')+'</div>';
+}
+function proposedHtml(inst,label){
+  var h='<div class="navwrap v2" data-inst="'+inst+'"><span class="tagline">'+label+'</span><div class="navin">';
+  h+='<a class="logo" href="#" data-stop aria-label="Cloudinary">'+CLOUD+'</a><nav class="cluster" aria-label="Main">';
+  ORDER.forEach(function(k){h+='<button type="button" class="pill" data-p="'+k+'" aria-expanded="false" aria-controls="pop-'+inst+'">'+esc(PROPOSED[k].l)+'</button>';});
+  h+='<a class="pill" href="#" data-stop>Pricing</a></nav><div class="actions"><a class="pill" href="#" data-stop>Log in</a><a class="gh" href="#" data-stop>Contact sales</a><a class="gl" href="#" data-stop>Sign up for free</a><button type="button" class="burger" aria-label="Menu" aria-expanded="false"><i></i></button></div>';
+  h+='<div class="pop" id="pop-'+inst+'" role="region" aria-label="Menu">'+ORDER.map(secHtml).join('')+'</div></div>';
+  var secs=ORDER.map(function(k){var P=PROPOSED[k],g=[];P.body.forEach(function(c){
+    if(c.k==='grid')g.push({h:c.head,items:c.items.map(function(i){return i[0]})});
+    if(c.k==='links')c.groups.forEach(function(x){g.push({h:x.head,items:x.items.map(function(i){return i[0]})})});
+    if(c.k==='solcols'||c.k==='linkrow')c.cols.forEach(function(x){g.push({h:x.h,items:x.items.map(function(i){return i[0]})})});
+    if(c.k==='cardband')c.blocks.forEach(function(x){g.push({h:x.head,items:x.items.map(function(i){return i[0]})})});
+    if(c.k==='ints')g.push({h:'Integrations',items:c.items.map(function(i){return i[0]}).concat([c.all[0]])});
+  });return {l:P.l,groups:g}});
+  secs.push({l:'Pricing',row:1});
+  h+=drawerHtml(secs,['Log in']);
+  return h+'</div>';
+}
+
+/* ---------- state ---------- */
+var navs=document.getElementById('navs'),frame=document.getElementById('frame');
+var mode='proposed',closeT=null;
+function setMode(m){
+  mode=m;
+  document.querySelectorAll('.seg button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.mode===m))});
+  frame.classList.toggle('compare',m==='compare');
+  var h='';
+  if(m==='today'||m==='compare') h+=todayHtml('a','Today');
+  if(m==='proposed'||m==='compare') h+=proposedHtml('b','Proposed');
+  navs.innerHTML=h;
+  navs.classList.toggle('compare',m==='compare');
+  applyHl();
+}
+function closeAll(except){
+  navs.querySelectorAll('.top[aria-expanded="true"]').forEach(function(b){
+    if(b===except)return;
+    b.setAttribute('aria-expanded','false');
+    var m=document.getElementById(b.getAttribute('aria-controls'));if(m)m.hidden=true;
+  });
+  navs.querySelectorAll('.pop.on').forEach(function(p){p.classList.remove('on')});
+  navs.querySelectorAll('.pill[aria-expanded="true"]').forEach(function(b){b.setAttribute('aria-expanded','false')});
+}
+function openTop(b){
+  closeAll(b);
+  b.setAttribute('aria-expanded','true');
+  document.getElementById(b.getAttribute('aria-controls')).hidden=false;
+}
+function sizePop(pop,key,fresh,btn){
+  var secs=pop.querySelectorAll('.psec'),t=null;
+  secs.forEach(function(s){if(s.dataset.p===key)t=s;});
+  if(!t)return;
+  var w=t.offsetWidth,h=t.offsetHeight;
+  if(btn){var nb=pop.parentElement.getBoundingClientRect(),pb=btn.getBoundingClientRect();var left=pb.left-nb.left-14;pop.style.left=Math.max(15,Math.min(left,nb.width-w-15))+'px';}
+  if(fresh){pop.classList.add('noanim');}
+  pop.style.width=w+'px';pop.style.height=h+'px';
+  secs.forEach(function(s){s.classList.toggle('cur',s===t)});
+  if(fresh){void pop.offsetWidth;pop.classList.add('on');setTimeout(function(){pop.classList.remove('noanim')},40);}
+  else pop.classList.add('on');
+}
+function openPill(b){
+  clearTimeout(closeT);
+  var pop=document.getElementById(b.getAttribute('aria-controls')),fresh=!pop.classList.contains('on');
+  navs.querySelectorAll('.pill[aria-expanded="true"]').forEach(function(x){if(x!==b)x.setAttribute('aria-expanded','false')});
+  b.setAttribute('aria-expanded','true');
+  sizePop(pop,b.dataset.p,fresh,b);
+}
+var hoverOK=function(){return window.matchMedia('(hover:hover) and (min-width:1101px)').matches};
+navs.addEventListener('click',function(e){
+  var a=e.target.closest('a[data-stop]');if(a){e.preventDefault();return;}
+  var p=e.target.closest('.pill[data-p]');
+  if(p){ p.getAttribute('aria-expanded')==='true'?closeAll():openPill(p); return; }
+  var b=e.target.closest('.top[data-i]');
+  if(b){ b.getAttribute('aria-expanded')==='true'?closeAll():openTop(b); return; }
+  var bg=e.target.closest('.burger');
+  if(bg){var w=bg.closest('.navwrap'),d=w.querySelector('.drawer');var o=d.classList.toggle('open');bg.setAttribute('aria-expanded',String(o));}
+});
+navs.addEventListener('mouseover',function(e){
+  if(!hoverOK())return;
+  var p=e.target.closest('.pill[data-p]');
+  if(p){ if(p.getAttribute('aria-expanded')!=='true')openPill(p); else clearTimeout(closeT); return; }
+  var b=e.target.closest('.top[data-i]');if(b&&b.getAttribute('aria-expanded')!=='true')openTop(b);
+  if(e.target.closest('.pop'))clearTimeout(closeT);
+});
+navs.addEventListener('mouseout',function(e){
+  if(!hoverOK())return;
+  var w=e.target.closest('.navwrap');if(!w)return;
+  if(e.relatedTarget&&w.contains(e.relatedTarget)){
+    var inside=e.relatedTarget.closest&&(e.relatedTarget.closest('.pop')||e.relatedTarget.closest('.pill[data-p]')||e.relatedTarget.closest('.top[data-i]')||e.relatedTarget.closest('.menu'));
+    if(inside)return;
+  }
+  clearTimeout(closeT);closeT=setTimeout(closeAll,180);
+});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeAll()});
+document.addEventListener('click',function(e){if(!e.target.closest('.navwrap')&&!e.target.closest('.ctl'))closeAll()});
+document.querySelectorAll('[data-stop]').forEach(function(a){a.addEventListener('click',function(e){e.preventDefault()})});
+document.querySelectorAll('.seg button').forEach(function(b){b.addEventListener('click',function(){setMode(b.dataset.mode)})});
+function applyHl(){
+  var on=document.getElementById('hl').checked;
+  navs.classList.toggle('hl',on);
+  document.getElementById('legend').classList.toggle('on',on);
+}
+document.getElementById('hl').addEventListener('change',applyHl);
+setMode('proposed');
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){navs.querySelectorAll('.pop.on').forEach(function(p){var b=navs.querySelector('.pill[aria-expanded="true"]');if(b)sizePop(p,b.dataset.p,false,b)})});
+
+var v=document.getElementById('hv');
+if(v){v.addEventListener('playing',function(){v.classList.add('ok')});var pr=v.play&&v.play();if(pr&&pr.catch)pr.catch(function(){});}
+
+/* ---------- evidence ---------- */
+function f(n){return n==null?'–':Number(n).toLocaleString('en-US')}
+function pct(a,b){return b?(a/b*100).toFixed(2).replace(/0$/,'').replace(/\.0$/,'')+'%':'–'}
+var MAXS=3133;
+var pOld=todayCount('Platform'),pNew=PROPOSED.platform.body[0].items.length+PROPOSED.platform.body[1].groups[0].items.length;
+var sOld=todayCount('Solutions'),sNew=linksOf(PROPOSED.solutions).length;
+var GROUPS=[
+ {t:'Leaving the top level',s:'Folded into Resources. Nothing is deleted.',rows:[
+  {n:'Developers',to:'Resources › Build, first. Also Solutions › By team, first',v:'res',vl:'Into Resources',s:4971,g:57,pv:'22,071 views · 6,028 users on /developers',sf:'<b>50</b> leads landed on /developers; homepage landed 65,817',w:'Even if every visitor arrived by clicking the nav, that is 0.5% of homepage users (1,266,079). The family produced 57 signups, 0.02% of the quarter.'},
+  {n:'Partners',to:'Resources › Partners',v:'res',vl:'Into Resources',s:4400,g:3,pv:'10,048 views · 2,785 users on /partners',sf:'<b>56</b> leads from the pages. <b>117</b> of 784 /contact leads (15%) pick Partnerships.',w:'Three signups across both partner pages. The partner channels do matter (see below), and they run through relationships, so the menu keeps a full Partners group and the portal link.'},
+  {n:'Support',to:'Resources › Support',v:'res',vl:'Into Resources',s:null,g:null,pv:'support.cloudinary.com is outside this property',sf:'<b>126</b> of 784 /contact leads (16%) are Customer Support; <b>517</b> across all leads',w:'A header Support link does not keep support requests off the sales form. Fix that with routing on /contact; the nav is not the lever.'},
+  {n:'Docs',to:'Resources › Docs and Community, first. Also Platform › Documentation',v:'watch',vl:'Into Resources, watch',s:162707,g:3133,pv:'Q3 landing sessions',sf:'<b>1,811</b> leads landed in /documentation',w:'The only removal with real traffic. It heads its own Docs and Community group, repeats in the Platform menu, the search icon stays, and it is the guardrail metric in the test.'}
+ ]},
+ {t:'Moving to the footer',s:'Search-driven content. It still links from every page.',rows:[
+  {n:'Guides',to:'Footer › Learn (18 topics)',v:'foot',vl:'To footer',s:119254,g:378,pv:'404,601 views · 119,075 users',sf:'<b>512</b> leads landed on a guide',w:'Visitors arrive from search and average 19 seconds of engagement. 0.12% of Q3 signups. Keeping the 18 topic links in the footer holds the sitewide internal links.'},
+  {n:'Glossary',to:'Footer › Learn',v:'foot',vl:'To footer',s:35678,g:120,pv:'96,556 views · 35,704 users',sf:'<b>98</b> leads landed on a glossary term',w:'Average engagement is 8 seconds per user. The index page itself drew 3,005 users in a quarter.'},
+  {n:'Labs',to:'Footer › Learn',v:'foot',vl:'To footer',s:1563,g:1,pv:'1,563 landing sessions',sf:'No Salesforce signal',w:'One signup in a quarter.'}
+ ]},
+ {t:'Staying in Resources',s:'Consolidated, reordered, not cut.',rows:[
+  {n:'Tools',to:'Resources › Learn, first',v:'stay',vl:'Stays',s:3848539,g:12283,pv:'30% of all landing sessions',sf:'<b>4,666</b> leads landed in /tools',w:'The biggest traffic engine on the site, so it leads the Learn column.'},
+  {n:'Blog',to:'Resources › Learn',v:'stay',vl:'Stays',s:59982,g:96,pv:'',sf:'<b>339</b> leads landed on the blog',w:'Converts at half the rate of Guides (0.16% vs 0.32%). A judgment call; it could join them in the footer.'},
+  {n:'Customers',to:'Resources › Learn',v:'stay',vl:'Stays',s:14006,g:3,pv:'',sf:'<b>24</b> leads',w:'Almost no direct signups. Proof pages assist, and this view cannot see assists. The next candidate for the footer.'},
+  {n:'Events',to:'Resources › Docs and Community',v:'stay',vl:'Stays',s:1558,g:0,pv:'',sf:'Event-sourced pipeline: <b>85</b> opps, <b>$511K</b> MRR',w:'Few web visits, but events source real pipeline offline.'},
+  {n:'Demos',to:'Resources › Learn (was also in Platform)',v:'stay',vl:'Stays, deduped',s:6447,g:16,pv:'',sf:'<b>17</b> leads',w:'Listed in two menus today. One home is enough.'},
+  {n:'Integrations',to:'Solutions › same six integrations (was listed in Platform, Solutions, Developers and Partners)',v:'stay',vl:'Stays, deduped',s:10451,g:25,pv:'',sf:'<b>40</b> leads',w:'Today’s six integrations (AWS, Shopify, Contentful, Syndigo, Figma, WordPress) stay, in one place instead of four. The full directory is one click away from All integrations and from Find a Technology Partner.'},
+  {n:'Professional and Education Services',to:'Resources › Support, Education and training',v:'stay',vl:'Stays',s:2134,g:1,pv:'',sf:'No Salesforce signal',w:'About a thousand sessions each and one signup between them. Low priority but harmless in a menu.'}
+ ]},
+ {t:'Staying at the top',s:'The four-item bar the brief asked for, plus Login and both CTAs.',rows:[
+  {n:'Pricing',to:'Top level',v:'stay',vl:'Stays',s:49379,g:5249,pv:'',sf:'<b>4,768</b> leads landed on /pricing',w:'Converts 10.6% of landing sessions, the highest of any section I pulled.'},
+  {n:'Platform',to:'Top level, '+pOld+' links → '+pNew+' plus 2 promos',v:'stay',vl:'Stays, reworked',s:22733,g:263,pv:'Products pages; /platform alone: 8,825 sessions, 26 signups',sf:'<b>305</b> leads landed on platform or product pages',w:'Product pages convert at 1.16%. Kept as asked, with Demos and Integrations rehomed and the image and video offers added.'},
+  {n:'Solutions',to:'Top level, '+sOld+' links → '+sNew,v:'stay',vl:'Stays, reworked',s:34787,g:20,pv:'',sf:'<b>82</b> leads',w:'Weakest direct conversion of the four. It keeps the same six integrations, cuts use cases from ten to six (ranked below), and adds the image and video links. It stays as the sales-led door and is the next review.'},
+  {n:'Login',to:'Top level, only small link left',v:'stay',vl:'Stays',s:null,g:null,pv:'3,664,126 views · 583,500 users',sf:'No lead-level signal',w:'3.66M views, 6.7% of all pageviews in the property. Existing users depend on it.'},
+  {n:'Contact sales',to:'Header CTA',v:'stay',vl:'Stays',s:null,g:null,pv:'Tracked by CTA source in Salesforce',sf:'<b>27</b> of 47 tagged CTA leads from header buttons since Sep 16; hero and product-page heroes gave 15. Contact Us sourced <b>468</b> opps, <b>$1.67M</b> MRR.',w:'The header button is the best-performing source. The funnel needs it.'},
+  {n:'Sign up for free',to:'Header CTA',v:'stay',vl:'Stays',s:null,g:null,pv:'1,432,923 views of /users/register_free',sf:'No lead-level signal',w:'The conversion the whole property is built around: 320,348 sign_up_successfully events in Q3.'}
+ ]}
+];
+var tb='';
+GROUPS.forEach(function(g){
+  tb+='<div class="grp"><h3>'+g.t+'</h3><p>'+g.s+'</p></div><div class="tw"><table><thead><tr><th>Link</th><th>Verdict</th><th>GA4 Q3 2026: landing sessions → signups</th><th>Salesforce, 12 months</th><th>Read</th></tr></thead><tbody>';
+  g.rows.forEach(function(r){
+    var ga;
+    if(r.s==null&&r.g==null) ga='<div class="num">'+(r.pv||'–')+'</div>';
+    else ga='<div class="num">'+f(r.s)+' → <b>'+f(r.g)+'</b><s>'+pct(r.g,r.s)+' signup rate</s></div><div class="bar" title="Signups, scaled to Docs"><i style="width:'+Math.min(100,r.g/MAXS*100)+'%"></i></div>'+(r.pv?'<div class="num"><s>'+r.pv+'</s></div>':'');
+    tb+='<tr><td class="l"><b>'+r.n+'</b><span>'+r.to+'</span></td><td><span class="chip '+r.v+'">'+r.vl+'</span></td><td>'+ga+'</td><td class="sf">'+r.sf+'</td><td class="why-t">'+r.w+'</td></tr>';
+  });
+  tb+='</tbody></table></div>';
+});
+document.getElementById('tables').innerHTML=tb;
+
+
+var UC=[
+ ['AI Agents','/agents','keep','Keep, 1st','1,152 landing sessions · 24s engaged','1,152 → 6','0','Only use case with real signups (0.61%). AI assistants sent 8.4% of registrations Jun–Sep, so this is where growth is.'],
+ ['Composable Architecture','/solutions/composable-architecture','keep','Keep, 2nd','6,985 · 2,238 · 2m 36s','1,093 → 1','3 (0)','Deepest engagement by far (the rest sit at 2 to 8 seconds) and 3 key events. It is the enterprise architect’s page.'],
+ ['Third-Party Visual Content','/solutions/third-party-visual-content','keep','Keep, 3rd','10,138 · 4,686 · 2s','4,806 → 0','0','Kept as a strategic page and the highest-traffic use case. The data shows no action yet (0 signups, 0 leads at about 1 second a session), so it is the one to instrument and re-check after launch.'],
+ ['DAM for Video','/products/digital_asset_management/dam-video','keep','Keep, 4th','1,137 landing sessions · 10s engaged','1,137 → 3','2 (1)','Three signups and a direct line to the video push in the Platform promo.'],
+ ['Creative Automation','/solutions/creative-automation','keep','Keep, 5th','6,730 · 2,077 · 4s','1,022 → 0','7 (3)','Most Salesforce leads of the original ten, and 3 of them asked for sales.'],
+ ['Headless DAM','/solutions/headless','keep','Keep, 6th','5,292 · 1,465 · 0s','593 → 0','2 (1)','Keeps its place for the DAM and composable buyer. The sibling page /solutions/headless-dam engages better (16s, 1 signup), so check which URL the link should use.'],
+ ['Immersive 3D','/solutions/3d','cut','Cut','6,915 · 2,152 · 7s','1,012 → 2','5 (1)','Two signups and five leads from about 1,000 landing sessions. Small but real, so the closest call of the cuts.'],
+ ['Performance Optimization','/solutions/performance_optimization','cut','Cut','6,837 · 2,133 · 8s','1,092 → 0','0','No signups or leads. The performance story still lives on the Image and Platform pages.'],
+ ['Cloudinary as Infrastructure','/solutions/cloudinary-as-infrastructure','cut','Cut','9,015 · 3,204 · 2s','2,164 → 0','0','Heavy views at 2 seconds, no signups or leads. Overlaps Composable Architecture.'],
+ ['Agentic Commerce','/solutions/agentic-commerce','cut','Cut','1,233 · 575 · 6s','435 → 0','0','Smallest audience and no action. Fold it into the AI Agents page if the story matters.']
+];
+document.getElementById('uc').innerHTML=UC.map(function(r){return '<tr><td class="l"><b>'+r[0]+'</b><span>'+r[1]+'</span></td><td><span class="chip '+(r[2]==='keep'?'stay':'foot')+'">'+r[3]+'</span></td><td class="num">'+r[4]+'</td><td class="num">'+r[5]+'</td><td class="num">'+r[6]+'</td><td class="why-t">'+r[7]+'</td></tr>'}).join('');
+
+/* solution mix */
+var SM=[['DAM',106,'#58b9ff'],['Image',96,'#60cfb7'],['API',84,'#7b91a8'],['Other',64,'#3a5068'],['Video',47,'#f3bb55']];
+var smTot=SM.reduce(function(a,r){return a+r[1]},0);
+document.getElementById('sbar').innerHTML=SM.map(function(r){return '<i style="flex:'+r[1]+';background:'+r[2]+'" title="'+r[0]+'"></i>'}).join('');
+document.getElementById('sk').innerHTML=SM.map(function(r){return '<span style="--c:'+r[2]+'">'+r[0]+'</span>'}).join('');
+document.getElementById('stab').innerHTML='<thead><tr><th style="padding-left:0">Solution picked</th><th>Leads</th><th style="text-align:right;padding-right:0">Share</th></tr></thead><tbody>'+SM.slice().map(function(r){return '<tr><td'+((r[0]==='Video'||r[0]==='Image')?' style="color:var(--fg);font-weight:600"':'')+'>'+r[0]+'</td><td class="num">'+r[1]+'</td><td class="num">'+Math.round(r[1]/smTot*100)+'%</td></tr>'}).join('')+'<tr><td style="color:var(--dim)">No solution picked</td><td class="num">57</td><td class="num">–</td></tr></tbody>';
+
+/* integrations ranked */
+var IR=[['Shopify',1382,4],['AWS',1280,2],['Syndigo',1135,0],['Contentful',1069,0],['WordPress',534,0]];
+document.getElementById('itab').innerHTML='<thead><tr><th style="padding-left:0">Integration page</th><th>Q3 landing sessions</th><th style="text-align:right;padding-right:0">Signups</th></tr></thead><tbody>'+IR.map(function(r){return '<tr><td>'+r[0]+'</td><td class="num">'+f(r[1])+'</td><td class="num">'+r[2]+'</td></tr>'}).join('')+'<tr><td>Figma</td><td class="num" style="color:var(--dim)">docs page, not tracked here</td><td class="num">–</td></tr></tbody>';
+
+/* partner channel breakdown */
+var P=[['Referral – Solutions',179,763134],['Partner Marketing',60,230959],['Channel Team Sourced',27,280238],['Technology Partnerships',18,95152],['Referral – Technology',18,103283]];
+var OTHER=[['Web – Organic',402,1315312],['Event – 3rd Party',75,542792],['SDR Generated',64,480481],['Web – Paid',38,139564],['Sales Generated',29,299346],['Everything else',26,109885]];
+var pm=P.reduce(function(a,r){return a+r[2]},0),om=OTHER.reduce(function(a,r){return a+r[2]},0),tm=pm+om;
+var cols=['#60cfb7','#58b9ff','#f3bb55','#ff8f7e','#b6a6ff'];
+document.getElementById('pbar').innerHTML=P.map(function(r,i){return '<i style="flex:'+r[2]+';background:'+cols[i]+'" title="'+r[0]+'"></i>'}).join('')+'<i style="flex:'+om+';background:#26394d" title="All other channels"></i>';
+document.getElementById('pk').innerHTML=P.map(function(r,i){return '<span style="--c:'+cols[i]+'">'+r[0]+'</span>'}).join('')+'<span style="--c:#26394d">All other channels</span>';
+document.getElementById('ptab').innerHTML='<tbody>'+P.map(function(r){return '<tr><td>'+r[0]+'</td><td class="num">'+r[1]+' opps</td><td class="num">$'+Math.round(r[2]/1000)+'K</td></tr>'}).join('')+
+ '<tr><td><b>Partner channels</b></td><td class="num"><b>'+P.reduce(function(a,r){return a+r[1]},0)+' opps</b></td><td class="num"><b>$'+(pm/1e6).toFixed(2)+'M · '+Math.round(pm/tm*100)+'%</b></td></tr>'+
+ '<tr><td style="color:var(--mut)">Web – Organic, for scale</td><td class="num">402 opps</td><td class="num">$1.32M · '+Math.round(1315312/tm*100)+'%</td></tr></tbody>';
+
+var L=[['Contact Us',468,1666251],['Outbound',90,432082],['Event',85,510842],['Referral',50,196333],['Web',50,226933]];
+document.getElementById('ltab').innerHTML='<thead><tr><th style="padding-left:0">Lead source</th><th>Opps</th><th style="text-align:right;padding-right:0">MRR</th></tr></thead><tbody>'+L.map(function(r,i){return '<tr><td'+(i===0?' style="color:var(--fg);font-weight:600"':'')+'>'+r[0]+'</td><td class="num">'+r[1]+'</td><td class="num">$'+(r[2]/1e6).toFixed(2)+'M</td></tr>'}).join('')+'</tbody>';
+var R=[['Sales',389,'#60cfb7'],['Customer Support',126,'#58b9ff'],['Partnerships',117,'#f3bb55'],['No reason given',82,'#26394d'],['PR, Careers, Self-Service, other',70,'#7b91a8']];
+document.getElementById('rbar').innerHTML=R.map(function(r){return '<i style="flex:'+r[1]+';background:'+r[2]+'" title="'+r[0]+'"></i>'}).join('');
+document.getElementById('rk').innerHTML=R.map(function(r){return '<span style="--c:'+r[2]+'">'+r[0]+' '+r[1]+' ('+Math.round(r[1]/784*100)+'%)</span>'}).join('');
+
+function li(a,cls){return a.map(function(x){return '<li'+(cls?' class="'+cls+'"':'')+'>'+x+'</li>'}).join('')}
+document.getElementById('fm').innerHTML=
+ '<div><h4>Platform</h4><ul>'+li(['Video','Image','Assets','MediaFlows','Moderation','Cloudinary AI'])+'</ul></div>'+
+ '<div><h4>Solutions</h4><ul>'+li(['E-commerce','Marketers','Retail','Media &amp; Entertainment','Integrations'])+'</ul></div>'+
+ '<div><h4>Resources</h4><ul>'+li(['Documentation','Tools','Blog','Customers','Support','Partners'])+li(['Glossary','Labs'],'new')+'</ul></div>'+
+ '<div class="span2"><h4 class="new">Guides</h4><ul class="cols2">'+G18.map(function(g){return '<li>'+g[0]+'</li>'}).join('')+'</ul></div>'+
+ '<div><h4>Company</h4><ul>'+li(['About','Careers','Press','Contact','Privacy','Terms'])+'</ul></div>';
+})();
+</script>
