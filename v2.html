@@ -548,7 +548,7 @@ pIn.addEventListener('keydown',e=>{
 });
 pbox.addEventListener('submit',e=>{e.preventDefault();if(!pIn.value.trim()){pIn.value=curPrompt||pIn.placeholder.replace('▍','');autoGrow()}ask(pIn.value.trim())});
 function askFor(q){pIn.value=q;autoGrow();engage(true);hero.scrollIntoView({behavior:RM?'auto':'smooth'});ask(q)}
-chipsEl.addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;askFor(CATS.find(c=>c.id===b.dataset.cat).prompts[0])});
+chipsEl.addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;askFor(CATS.find(c=>c.id===b.dataset.cat).label)});
 
 /* persona menu */
 const roleBtn=$('#role'),rmenu=$('#rmenu');
@@ -572,14 +572,14 @@ const PAGES={
  perf:['Performance Optimization','/solutions/performance_optimization','Faster pages through image and video optimization','performance speed web vitals lcp weight optimize storefront'],
  video:['Video','/products/video','Scale high-performing video faster with AI-powered automation','video stream player caption webinar clip social adaptive'],
  videoapi:['Video API','/video_api','Add video to your website or app in minutes','video api developer stream hls adaptive encode player'],
- player:['Video Player','/documentation/video_player_api_reference','Embeddable, brandable player with chapters, playlists and analytics','video player chapters analytics embed brand'],
+ player:['Video Player','/documentation/video_player_api_reference','Embeddable, brandable player with chapters, playlists and analytics','video player chapters analytics embed branded'],
  damvideo:['DAM for Video','/products/digital_asset_management/dam-video','Manage video libraries alongside images','video dam library manage organize'],
  assets:['Assets (DAM)','/products/digital_asset_management','AI-powered digital asset management','dam asset organize library metadata tag share agency brand migrate search'],
  headless:['Headless DAM','/solutions/headless','Use Cloudinary as the media layer for a headless stack','headless dam composable api cms'],
  contentops:['Content Operations','/solutions/content-operations-teams','Libraries, metadata and workflows for content teams','content operations metadata workflow library organize'],
  creative:['Creative Automation','/solutions/creative-automation','Produce on-brand variants at scale','creative automation variants campaign social crop banner'],
  mediaflows:['MediaFlows','/products/mediaflows','Low-code workflow automation for image and video','workflow automation low-code automate pipeline'],
- moderation:['Moderation','/products/moderation','AI-powered, brand-aligned moderation','moderation ugc safety brand review'],
+ moderation:['Moderation','/products/moderation','AI-powered, brand-aligned moderation','moderation ugc safety review'],
  pricing:['Pricing','/pricing','Plans, credits and the free tier','pricing cost plan credit budget usage quote estimate'],
  enterprise:['Enterprise','/enterprise','Custom volumes, security, SLAs and support','enterprise security sso scale quote executive'],
  startups:['Cloudinary for Startups','/solutions/cloudinary-for-startups','Programs and plans for early-stage teams','startup small pricing'],
@@ -621,18 +621,101 @@ const CANNED={
  agents:['Cloudinary MCP servers let agents in Claude, Cursor or your own stack upload, search, transform and tag media with the credentials and permissions you choose. Every edit an agent makes is a reproducible URL, and results land in your Media Library with metadata.',['agents','mcp','developers','docs']],
  general:['Cloudinary handles the whole path for images and video: upload once, then manage, transform and deliver every variant through one set of APIs. Images get the right format and size per device, video gets adaptive streaming and captions, and AI and workflow automation remove the manual steps in between.',['platform','image','video','mediaflows']],
 };
-function pickPages(q,theme){
-  const base=CANNED[theme][1].slice();
-  const words=q.toLowerCase().match(/[a-z0-9-]+/g)||[];
-  const scored=Object.keys(PAGES).filter(id=>!base.includes(id)&&id!=='contact').map(id=>[id,words.filter(w=>w.length>3&&PAGES[id][3].includes(w)).length]).filter(x=>x[1]>1).sort((a,b)=>b[1]-a[1]);
-  if(scored[0])base.splice(3,1,scored[0][0]);
-  const pp=PERSONA_PAGE[persona];if(pp&&!base.includes(pp))base.splice(3,1,pp);
-  return base.slice(0,4).map(id=>({id,why:PAGES[id][2]}));
+/* offline answer composer: builds the answer from what the question actually mentions.
+   Each fact fires on its own keywords; the best 2-3 are stitched together, led by the visitor's own goal,
+   with a line for their scale (if they gave numbers) and one for their persona. Pages follow the same matches. */
+const FACTS_KB=[
+ [/background|cut ?out|remove (the )?bg|transparent/i,'Background removal is an AI transformation, so a clean cutout is one parameter on the image URL instead of a retouching queue.',['ai','image'],1.4],
+ [/crop|square|portrait|banner|aspect|reframe|vertical|thumbnail/i,'Smart cropping (g_auto) keeps the subject in frame, so one master image produces square, portrait and banner versions automatically.',['image','creative'],1.1],
+ [/weight|compress|lighter|smaller|faster|speed|web vitals|lcp|avif|webp|performance|load time|page ?speed|quality/i,'f_auto and q_auto pick the lightest format and compression each browser supports, usually AVIF or WebP, with no visible quality loss.',['perf','image'],1],
+ [/responsive|device|mobile|screen|breakpoint|retina/i,'Responsive sizing serves every screen the width it needs instead of one oversized file.',['imageapi','perf'],0.9],
+ [/generative|generate (?:an? )?(?:image|images|variations?|backgrounds?)|gen(?:erative)? ?fill|extend (?:the|an|my|our)? ?image|recolou?r|outpaint/i,'Generative fill, replace and recolor adjust or extend an image without a new shoot.',['ai','creative']],
+ [/storefront|shop|e-?commerce|product|marketplace|catalog|sku|pdp/i,'For product catalogs, every new SKU gets its variants the moment it is uploaded, because transformations run on request.',['ecom','retail'],.5],
+ [/shopify/i,'There is a Shopify integration, so the same media works inside your store.',['shopify'],1.3],
+ [/stream|buffer|adaptive|bitrate|4k|hls|dash|playback/i,'Videos are encoded on upload and streamed with adaptive bitrate over HLS or DASH, so viewers get the best quality their connection can hold.',['video','videoapi'],1.1],
+ [/player|chapter|playlist|embed|analytics/i,'The Cloudinary Video Player embeds with your branding, chapters, playlists and viewing analytics.',['player','video'],1],
+ [/caption|subtitle|transcri|accessib/i,'Captions and transcripts are generated automatically, which helps accessibility and makes video searchable.',['video','ai'],1.1],
+ [/clip|social|short|reel|tiktok|webinar|highlight|preview|trailer/i,'AI previews and vertical crops turn one long source into short clips for social without re-editing it.',['video','creative'],1.1],
+ [/\blive[- ]?stream|\blive video|\blive event|\bbroadcast/i,'Live streaming runs on the same platform as your on-demand video.',['video']],
+ [/find|search|organi[sz]|library|million|thousand|folder|messy|chaos/i,'Every upload is searchable by tags, metadata and what is in the image, so people find assets without knowing folder paths.',['assets'],0.6],
+ [/tag|metadata|taxonomy|label|attribute/i,'AI auto-tagging labels assets on upload, and structured metadata enforces required fields so the library stays consistent.',['assets','contentops'],1],
+ [/share|agenc|external|dropbox|portal|retailer|press|approv|brand asset/i,'Portals and collections give agencies, retailers and press only the approved assets, with no shared-drive links.',['assets','contentops'],1.1],
+ [/migrat|move from|switch|current dam|legacy|replace our/i,'Migration keeps your folders and metadata, and the Cloudinary team can help plan the move.',['assets','contact'],1.4],
+ [/adobe|photoshop|figma|creative cloud|designer/i,'Designers can work from the Adobe Creative Cloud and Figma connectors instead of downloading and re-uploading files.',['integrations','creative'],1.2],
+ [/automat|workflow|pipeline|every upload|no-?code|low-?code|manual/i,'MediaFlows automates multi-step media workflows in a low-code builder, triggered whenever something is uploaded.',['mediaflows','platform'],0.7],
+ [/agent|mcp|claude|cursor|llm|copilot/i,'Cloudinary MCP servers let agents in Claude, Cursor or your own stack call asset, transformation and metadata tools with the permissions you set.',['agents','mcp'],1.4],
+ [/moderat|ugc|user[- ]generated|nsfw|unsafe|inappropriate/i,'Moderation checks uploaded images and video automatically before they go live.',['moderation'],1.5],
+ [/pric|cost|plan\b|plans|credit|budget|how much|quote|estimate|spend/i,'Plans use monthly credits that cover storage, bandwidth and transformations, and there is a free plan to start.',['pricing','enterprise'],1.3],
+ [/enterprise|security|sso|compliance|governance|sla|audit/i,'Enterprise plans add SSO, SLAs, governance controls and dedicated support.',['enterprise'],1],
+ [/sdk|\bapi\b|node|react|next\.?js|ruby|php|python|java|code|developer|endpoint/i,'SDKs for Node.js, Next.js, React, Ruby, PHP and more wrap the same URL-based API, so it fits the stack you already have.',['developers','quick','docs'],0.9],
+ [/headless|cms|contentful|composable|wordpress|sanity/i,'In a headless stack Cloudinary is the media layer behind your CMS, with integrations for Contentful, WordPress and others.',['headless','integrations'],1.2],
+ [/partner|reseller|integrator|referral|alliance/i,'Agencies and integrators join as solution partners, and software companies that build Cloudinary into their product join as technology partners.',['partners','solpartners'],1.4],
+ [/saas|our (product|platform|app)|white[- ]?label|integration into|build .*into/i,'Software companies build Cloudinary into their own product through the APIs and the extensibility framework.',['extensibility','integrations'],1.2],
+ [/startup|small team|side project|early[- ]stage/i,'There is a startup program and a free plan for early-stage teams.',['startups','pricing'],1.2],
+ [/deliver|cdn|global|latency|worldwide/i,'Every image and video variant is cached and served from a global CDN, close to each viewer.',['platform','perf'],0.6],
+ [/image and video|images and videos|all (our )?media|whole|end[- ]to[- ]end|platform/i,'Images and video go through the same pipeline: upload once, then transform and deliver every variant from one set of APIs.',['platform'],0.6],
+];
+const PERSONA_LINE={
+ 'Developers':'For you as a developer, the quickest start is the SDK quick start for your stack.',
+ 'E-commerce':'For an e-commerce team, this applies to every product image and video without editing each SKU.',
+ 'Marketers':'Your marketing team can do this from the Media Library without writing code.',
+ 'Product and Engineering':'Engineering wires it in once through the API, and every product surface gets consistent media.',
+ 'IT Teams':'IT keeps control through roles, SSO and governance settings.',
+ 'Content Operations':'Content ops gets one governed library with required metadata instead of scattered folders.',
+ 'CX Professionals':'Customers see the result directly: faster, consistent media on every device.',
+ 'Creative teams':'Creatives keep working in their own tools while approved files publish straight through.',
+ 'Executives':'The business case is fewer tools and manual steps, with cost tied to actual usage.',
+ 'Agencies and partners':'If you build this for clients, the solution partner program adds enablement and a directory listing.',
+};
+const PERSONA_SNIPPET_PAGE={'Developers':'quick','E-commerce':'ecom','Marketers':'marketers','Product and Engineering':'developers','IT Teams':'enterprise','Content Operations':'contentops','Executives':'enterprise','Agencies and partners':'solpartners','Creative teams':'creative','CX Professionals':'perf'};
+const VERB=/^(automate|stream|turn|remove|cut|connect|give|organi[sz]e|deliver|build|make|find|generate|resize|crop|compress|migrate|scale|serve|add|reduce|speed up|share|tag|optimi[sz]e|transform|estimate|create|launch|personali[sz]e|protect|manage|let|have|get|improve|replace|move|store|host|convert|caption)\b/i;
+function goalOf(q){
+  let s=q.trim().replace(/\s+/g,' ').replace(/[?.!]+$/,''),hit=false;
+  for(const p of[/^(?:please\s+)?show me how (?:the )?cloudinary(?: platform)? (?:can|could|will) (.+)/i,/^(?:please\s+)?show me how (?:to |i can |we can )?(.+)/i,/^how (?:do|can|could|should|would) (?:i|we) (.+)/i,/^can (?:i|we|cloudinary) (.+)/i,/^(?:help me|i want to|i need to|we need to|we want to|i'd like to|we'd like to) (.+)/i]){const m=s.match(p);if(m){s=m[1];hit=true;break}}
+  if(!hit&&!VERB.test(s))return null;
+  s=s.replace(/\bmy\b/gi,'your').replace(/\bour\b/gi,'your').replace(/\b(me|us)\b/gi,'you').replace(/\b(I|we)\b/g,'you').replace(/\bI'm\b/g,"you're");
+  if(s.split(' ').length>16)return null;
+  return s.charAt(0).toLowerCase()+s.slice(1);
 }
+const CHIP_ANS={
+ dam:['Cloudinary Assets is a digital asset management system built on the same platform that delivers your media. AI tags every upload so assets are searchable by what is in them, structured metadata keeps fields consistent, and Portals and collections share only approved files with agencies and partners. Migration keeps your existing folders and metadata.',['assets','contentops','headless','damvideo']],
+ image:['Cloudinary optimizes and transforms media on request from one master file. f_auto and q_auto pick the lightest format and compression for each browser, smart cropping fits any aspect ratio, and AI handles background removal and generative fill. Every variant is a URL, cached and served from a global CDN.',['image','perf','ai','imageapi']],
+ video:['Upload a video once and Cloudinary encodes it, streams it with adaptive bitrate over HLS or DASH, and adds captions and AI previews automatically. The Video Player embeds with your branding, chapters and analytics, and video libraries are managed in the same DAM as your images.',['video','videoapi','player','damvideo']],
+ pricing:['Cloudinary plans use monthly credits that cover storage, bandwidth and transformations, so cost follows your actual usage. There is a free plan to start, and paid and enterprise plans add credits, seats, SSO and support. To price your current usage, share your monthly storage, bandwidth and video volume with sales and they will size a plan with you.',['pricing','contact','enterprise','startups']],
+ agents:['Cloudinary MCP servers let AI agents in Claude, Cursor or your own stack upload, search, tag, transform and deliver media with the credentials and permissions you set. Every edit an agent makes is a reproducible URL, and results land in your Media Library with metadata, so automation stays governed.',['agents','mcp','mediaflows','developers']],
+};
+function compose(q,theme){
+  const chip=CATS.find(c=>c.label.toLowerCase()===q.trim().toLowerCase());
+  if(chip&&CHIP_ANS[chip.id]){
+    const [t,pg]=CHIP_ANS[chip.id],ids=pg.slice(),pp=PERSONA_SNIPPET_PAGE[persona];
+    if(pp&&!ids.includes(pp)&&chip.id!=='pricing')ids[3]=pp;
+    return{text:t+(PERSONA_LINE[persona]?' '+PERSONA_LINE[persona]:''),pages:ids.map(id=>({id,why:PAGES[id][2]}))};
+  }
+  const hits=FACTS_KB.map(([re,txt,pages,w=1],i)=>{const m=q.match(new RegExp(re.source,'gi'));return{i,txt,pages,n:m?m.length:0,sc:m?Math.min(m.length,3)*w:0}}).filter(h=>h.n>0).sort((a,b)=>b.sc-a.sc||a.i-b.i).slice(0,3);
+  const parts=[];
+  const goal=goalOf(q);
+  if(goal)parts.push(`To ${goal}, here is how Cloudinary handles it.`);
+  if(hits.length)hits.forEach(h=>parts.push(h.txt));else parts.push(CANNED[theme][0]);
+  const num=q.match(/\b\d[\d,.]*\s*(?:million|m\b|k\b|thousand|tb|gb|minutes|hours|skus?|photos|images|videos|assets|users|pages)\b/i);
+  if(num)parts.push(`Volumes like ${num[0].trim()} are routine on Cloudinary; volume mostly affects the plan, which sales can size with you.`);
+  if(PERSONA_LINE[persona])parts.push(PERSONA_LINE[persona]);
+  // pages: the top page of each matched fact first, then the persona's page if there is room, then second picks and keyword matches
+  const allowContact=/pric|cost|quote|migrat|talk|sales|contact/i.test(q);
+  const ids=[];const push=id=>{if(PAGES[id]&&!ids.includes(id)&&ids.length<4&&(id!=='contact'||allowContact))ids.push(id)};
+  hits.forEach(h=>push(h.pages[0]));
+  if(ids.length<3)push(PERSONA_SNIPPET_PAGE[persona]);
+  hits.forEach(h=>h.pages.slice(1).forEach(push));
+  const words=(q.toLowerCase().match(/[a-z0-9-]+/g)||[]).filter(w=>w.length>4);
+  Object.keys(PAGES).map(id=>[id,words.filter(w=>PAGES[id][3].split(' ').some(t=>t===w||(w.length>5&&t.startsWith(w.slice(0,6))))).length]).filter(x=>x[1]).sort((a,b)=>b[1]-a[1]).forEach(x=>push(x[0]));
+  push(PERSONA_SNIPPET_PAGE[persona]);
+  CANNED[theme][1].forEach(push);
+  return{text:parts.join(' '),pages:ids.map(id=>({id,why:PAGES[id][2]}))};
+}
+function pickPages(q,theme){return compose(q,theme).pages}
 
 /* live answers via Claude, only inside a Claude viewer */
 const sampleP=(window.claude&&typeof claude.use==='function')?claude.use('sample').catch(()=>null):Promise.resolve(null);
-let sampleOff=false;
+let sampleOff=false,sampleReady=false;sampleP.then(x=>{sampleReady=!!x});
 const FACTS=`Facts you may use (no other numbers, prices, customer names or product names):
 - Cloudinary is the agentic media platform for images and video, used by 4M developers and 13K brands.
 - Image: transformations by URL, f_auto picks AVIF/WebP/JPEG per browser, q_auto compression, g_auto smart cropping, responsive sizes, global CDN, SDKs for Node.js, Next.js, React, Ruby, PHP and more.
@@ -680,7 +763,8 @@ async function ask(q){
   ansStatus.textContent='Thinking';ansTxt.innerHTML=CUR;ansNote.textContent='';
   ansPages.innerHTML='<span class="sk"></span><span class="sk"></span><span class="sk"></span><span class="sk"></span>';
   const theme=classify(q);$('#ctaSales').href=CLD+'/contact?utm_web_contact_source=hp_prompt_'+({image:'img',video:'vid',dam:'dam',pricing:'price',partners:'ptnr',agents:'agent',general:'gen'}[theme]);
-  const sample=sampleOff?null:await Promise.race([sampleP,wait(2500).then(()=>null)]);
+  const sample=sampleOff?null:await Promise.race([sampleP,wait(9000).then(()=>null)]);
+  let why=sample?'':(window.claude?'Live answers did not start in this view, so this answer was assembled from your question.':'This copy runs outside Claude, so this answer was assembled from your question. Open the published artifact for live answers.');
   if(id!==runId)return;
   if(sample){
     try{
@@ -695,10 +779,11 @@ async function ask(q){
     }catch(e){
       if(e&&e.code==='cancelled')return;
       if(e&&['not_granted','sampling_disabled','not_declared','capability_disabled','capability_removed'].includes(e.code))sampleOff=true;
+      why=e&&e.code==='not_granted'?'Claude access was declined for this page, so this answer was assembled from your question. Reload to be asked again.':e&&e.code==='rate_limited'?'Live answers are busy right now, so this answer was assembled from your question.':'Live answer failed ('+((e&&e.code)||'error')+'), so this answer was assembled from your question.';
     }
   }
-  // prepared answer, typed out
-  const [text]=CANNED[theme];ansStatus.textContent='Answering';
+  // assembled answer, typed out
+  const built=compose(q,theme),text=built.text;ansStatus.textContent='Answering';
   if(RM){ansTxt.textContent=text}else{
     const words=text.split(' ');let out='';
     await wait(500);
@@ -706,8 +791,8 @@ async function ask(q){
     ansTxt.textContent=text;
   }
   if(id!==runId)return;
-  renderPages(pickPages(q,theme));
-  ansStatus.textContent='Answer';ansNote.textContent='Prototype answer from prepared copy. In the published artifact, Claude writes the answer live.';ans.classList.remove('busy');
+  renderPages(built.pages);
+  ansStatus.textContent='Answer';ansNote.textContent=why||'Assembled from your question.';ans.classList.remove('busy');
 }
 
 /* popular questions */
